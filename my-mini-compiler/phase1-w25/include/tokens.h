@@ -6,29 +6,26 @@
 #ifndef TOKENS_H
 #define TOKENS_H
 
-/* Token types that need to be recognized by the lexer
- * TODO: Add more token types as per requirements:
- * - Keywords or reserved words (if, repeat, until)
- * - Identifiers
- * - String literals
- * - More operators
- * - Delimiters
- */
 typedef enum {
-    TOKEN_EOF,
+    TOKEN_EOF,        // End of file
     TOKEN_NUMBER,     // e.g., "123", "456"
+    TOKEN_IDENTIFIER, // variable names, function names: foo, bar
+    TOKEN_KEYWORD,    // reserved words: if, else, while
+    TOKEN_STRING,     // string literals: "hello"
     TOKEN_OPERATOR,   // e.g., "+", "-"
-    TOKEN_ERROR
+    TOKEN_DELIMITER,  // delimiters: ;, (), {}
+    TOKEN_COMMENT,    // comments: //, /* */
+    TOKEN_ERROR       // Token with an error
 } TokenType;
 
-/* Error types for lexical analysis
- * TODO: Add more error types as needed for your language - as much as you like !!
- */
 typedef enum {
-    ERROR_NONE,
-    ERROR_INVALID_CHAR,
-    ERROR_INVALID_NUMBER,
-    ERROR_CONSECUTIVE_OPERATORS
+    ERROR_NONE,                    // no error
+    ERROR_INVALID_CHAR,            // unrecogonized character
+    ERROR_INVALID_NUMBER,          // Malinformed numeric literal
+    ERROR_CONSECUTIVE_OPERATORS,   // Multiple consecutive operators
+    ERROR_UNTERMINATED_STRING,     // string not properly closed
+    ERROR_UNEXPECTED_EOF,          // unexpected end of file
+    ERROR_IDENTIFIER_TOO_LONG      // identifier length exceeds limit
 } ErrorType;
 
 /* Token structure to store token information
@@ -37,10 +34,11 @@ typedef enum {
  * Don't forget to update the token fields in lexer.c as well
  */
 typedef struct {
-    TokenType type;
-    char lexeme[100];   // Actual text of the token
-    int line;           // Line number in source file
-    ErrorType error;    // Error type if any
+    TokenType type;     // type of token
+    char lexeme[256];   // actual text of the token (increased size for strings)
+    int line;           // line number in source file
+    int column;         // column number where token starts
+    ErrorType error;    // error type if applicable
 } Token;
 
 #endif /* TOKENS_H */

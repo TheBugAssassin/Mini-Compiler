@@ -9,6 +9,8 @@
 static int current_line = 1;
 static char last_token_type = 'x'; // For checking consecutive operators
 
+const char *keywords[] = {"if", "repeat", "until", "else", "while", NULL};
+
 /* Print error messages for lexical errors */
 void print_error(ErrorType error, int line, const char *lexeme) {
     printf("Lexical Error at line %d: ", line);
@@ -22,6 +24,9 @@ void print_error(ErrorType error, int line, const char *lexeme) {
         case ERROR_CONSECUTIVE_OPERATORS:
             printf("Consecutive operators not allowed\n");
             break;
+        case ERROR_UNTERMINATED_STRING:
+            printf("Unterminated string literal\n");
+            break;
         default:
             printf("Unknown error\n");
     }
@@ -32,19 +37,31 @@ void print_error(ErrorType error, int line, const char *lexeme) {
  *  TODO Update your printing function accordingly
  */
 
+/* Print token information */
 void print_token(Token token) {
     if (token.error != ERROR_NONE) {
         print_error(token.error, token.line, token.lexeme);
         return;
     }
-
     printf("Token: ");
     switch (token.type) {
         case TOKEN_NUMBER:
             printf("NUMBER");
             break;
+        case TOKEN_IDENTIFIER:
+            printf("IDENTIFIER");
+            break;
+        case TOKEN_KEYWORD:
+            printf("KEYWORD");
+            break;
+        case TOKEN_STRING:
+            printf("STRING");
+            break;
         case TOKEN_OPERATOR:
             printf("OPERATOR");
+            break;
+        case TOKEN_DELIMITER:
+            printf("DELIMITER");
             break;
         case TOKEN_EOF:
             printf("EOF");
@@ -52,9 +69,19 @@ void print_token(Token token) {
         default:
             printf("UNKNOWN");
     }
-    printf(" | Lexeme: '%s' | Line: %d\n",
-           token.lexeme, token.line);
+    printf(" | Lexeme: '%s' | Line: %d\n", token.lexeme, token.line);
 }
+
+/* Check if string is a keyword */
+int is_keyword(const char *str) {
+    for (int i = 0; keywords[i] != NULL; i++) {
+        if (strcmp(str, keywords[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 /* Get next token from input */
 Token get_next_token(const char *input, int *pos) {
@@ -77,7 +104,22 @@ Token get_next_token(const char *input, int *pos) {
 
     c = input[*pos];
 
-    // TODO: Add comment handling here
+    // Handle comments
+    if (c == '/' && input[*pos + 1] == '/') {
+        while (input[*pos] != '\n' && input[*pos] != '\0') {
+            (*pos)++;
+        }
+        return get_next_token(input, pos);
+    }
+    if (c == '/' && input[*pos + 1] == '*') {
+        (*pos) += 2;
+        while (!(input[*pos] == '*' && input[*pos + 1] == '/') && input[*pos] != '\0') {
+            if (input[*pos] == '\n') current_line++;
+            (*pos)++;
+        }
+        if (input[*pos] != '\0') (*pos) += 2;
+        return get_next_token(input, pos);
+    }
 
     // Handle numbers
     if (isdigit(c)) {
@@ -93,10 +135,36 @@ Token get_next_token(const char *input, int *pos) {
         return token;
     }
 
-    // TODO: Add keyword and identifier handling here
-    // Hint: You'll have to add support for keywords and identifiers, and then string literals
+    // Handle identifiers and keywords
+    if (isalpha(c)) {
+        int i = 0;
+        do {
+            token.lexeme[i++] = c;
+            (*pos)++;
+            c = input[*pos];
+        } while (isalnum(c) && i < sizeof(token.lexeme) - 1);
+        token.lexeme[i] = '\0';
+        token.type = is_keyword(token.lexeme) ? TOKEN_KEYWORD : TOKEN_IDENTIFIER;
+        return token;
+    }
 
-    // TODO: Add string literal handling here
+    // Handle string literals
+    if (c == '"') {
+        int i = 0;
+        (*pos)++;
+        while ((c = input[*pos]) != '"' && c != '\0' && i < sizeof(token.lexeme) - 1) {
+            token.lexeme[i++] = c;
+            (*pos)++;
+        }
+        if (c == '\0') {
+            token.error = ERROR_UNTERMINATED_STRING;
+        } else {
+            (*pos)++; // Consume closing quote
+            token.lexeme[i] = '\0';
+            token.type = TOKEN_STRING;
+        }
+        return token;
+    }
 
     // Handle operators
     if (c == '+' || c == '-') {
@@ -116,7 +184,14 @@ Token get_next_token(const char *input, int *pos) {
         return token;
     }
 
-    // TODO: Add delimiter handling here
+    // Handle delimiters
+    if (strchr(";(){}", c)) {
+        token.type = TOKEN_DELIMITER;
+        token.lexeme[0] = c;
+        token.lexeme[1] = '\0';
+        (*pos)++;
+        return token;
+    }
 
     // Handle invalid characters
     token.error = ERROR_INVALID_CHAR;
@@ -142,3 +217,6 @@ int main() {
 
     return 0;
 }
+
+//gcc ./phase1-w25/src/lexer/lexer.c -o lexer.exe
+//.\lexer.exe
