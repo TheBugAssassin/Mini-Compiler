@@ -27,6 +27,9 @@ void print_error(ErrorType error, int line, const char *lexeme) {
         case ERROR_UNTERMINATED_STRING:
             printf("Unterminated string literal\n");
             break;
+        case ERROR_INVALID_IDENTIFIER:
+            printf("Invalid identifier: '%s'\n", lexeme);
+            break;
         default:
             printf("Unknown error\n");
     }
@@ -123,29 +126,55 @@ Token get_next_token(const char *input, int *pos) {
 
     // Handle numbers
     if (isdigit(c)) {
-        int i = 0;
-        do {
+    int i = 0;
+    do {
+        token.lexeme[i++] = c;
+        (*pos)++;
+        c = input[*pos];
+    } while (isdigit(c) && i < sizeof(token.lexeme) - 1);
+
+    if (isalpha(c) || c == '_') {
+        token.error = ERROR_INVALID_IDENTIFIER;
+        while (isalnum(c) && i < sizeof(token.lexeme) - 1) {
             token.lexeme[i++] = c;
             (*pos)++;
             c = input[*pos];
-        } while (isdigit(c) && i < sizeof(token.lexeme) - 1);
-
+        }
         token.lexeme[i] = '\0';
-        token.type = TOKEN_NUMBER;
         return token;
     }
 
+    token.lexeme[i] = '\0';
+    token.type = TOKEN_NUMBER;
+    return token;
+    }
+
     // Handle identifiers and keywords
-    if (isalpha(c)) {
-        int i = 0;
-        do {
-            token.lexeme[i++] = c;
-            (*pos)++;
-            c = input[*pos];
-        } while (isalnum(c) && i < sizeof(token.lexeme) - 1);
-        token.lexeme[i] = '\0';
-        token.type = is_keyword(token.lexeme) ? TOKEN_KEYWORD : TOKEN_IDENTIFIER;
-        return token;
+    if (isalpha(c) || c == '_') { 
+    int i = 0;
+    do {
+        token.lexeme[i++] = c;
+        (*pos)++;
+        c = input[*pos];
+    } while ((isalnum(c) || c == '_') && i < sizeof(token.lexeme) - 1);
+
+    token.lexeme[i] = '\0';
+
+    if (is_keyword(token.lexeme)) {
+        token.type = TOKEN_KEYWORD;
+    } 
+    else {
+        token.type = TOKEN_IDENTIFIER;
+    }
+    
+    if (!isalnum(c) && c != '_' && c != '\0' && c != ' ' && c != '\n' && c != ';' && c != '(' && c != ')') {
+        token.error = ERROR_INVALID_CHAR;
+        token.lexeme[0] = c;
+        token.lexeme[1] = '\0';
+        (*pos)++;
+    }
+
+    return token;
     }
 
     // Handle string literals
@@ -167,21 +196,47 @@ Token get_next_token(const char *input, int *pos) {
     }
 
     // Handle operators
-    if (c == '+' || c == '-') {
-        if (last_token_type == 'o') {
-            // Check for consecutive operators
-            token.error = ERROR_CONSECUTIVE_OPERATORS;
-            token.lexeme[0] = c;
-            token.lexeme[1] = '\0';
-            (*pos)++;
-            return token;
-        }
+    if (c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '!' || c == '&' || c == '|' || c == '<' || c == '>') {
+    if ((c == '=' || c == '!' || c == '<' || c == '>') && input[*pos + 1] == '=') {
         token.type = TOKEN_OPERATOR;
         token.lexeme[0] = c;
-        token.lexeme[1] = '\0';
-        last_token_type = 'o';
-        (*pos)++;
+        token.lexeme[1] = '=';
+        token.lexeme[2] = '\0';
+        (*pos) += 2; 
         return token;
+    }
+    
+    if ((c == '&' || c == '|') && input[*pos + 1] == c) {
+        token.type = TOKEN_OPERATOR;
+        token.lexeme[0] = c;
+        token.lexeme[1] = c;
+        token.lexeme[2] = '\0';
+        (*pos) += 2; 
+        return token;
+    }
+    
+    if ((c == '+' && input[*pos + 1] == '-') || (c == '-' && input[*pos + 1] == '+')) {
+        token.type = TOKEN_OPERATOR;
+        token.lexeme[0] = '-';
+        token.lexeme[1] = '\0';
+        (*pos) += 2;
+        return token;
+    }
+    
+    if (input[*pos + 1] == c && (c == '+' || c == '-')) {
+        token.error = ERROR_CONSECUTIVE_OPERATORS;
+        token.lexeme[0] = c;
+        token.lexeme[1] = c;
+        token.lexeme[2] = '\0';
+        (*pos) += 2;
+        return token;
+    }
+    
+    token.type = TOKEN_OPERATOR;
+    token.lexeme[0] = c;
+    token.lexeme[1] = '\0';
+    (*pos)++;
+    return token;
     }
 
     // Handle delimiters
