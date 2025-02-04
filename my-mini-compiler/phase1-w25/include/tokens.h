@@ -15,6 +15,7 @@ typedef enum {
     TOKEN_OPERATOR,   // e.g., "+", "-"
     TOKEN_DELIMITER,  // delimiters: ;, (), {}
     TOKEN_COMMENT,    // comments: //, /* */
+    TOKEN_SPECIAL,
     TOKEN_ERROR       // Token with an error
 } TokenType;
 
@@ -25,7 +26,7 @@ typedef enum {
     ERROR_CONSECUTIVE_OPERATORS,   // Multiple consecutive operators
     ERROR_UNTERMINATED_STRING,     // string not properly closed
     ERROR_UNEXPECTED_EOF,          // unexpected end of file
-    ERROR_IDENTIFIER_TOO_LONG      // identifier length exceeds limit
+    ERROR_IDENTIFIER_TOO_LONG,    // identifier length exceeds limit
     ERROR_INVALID_IDENTIFIER        // Identifier starting with a number or containing invalid characters
 } ErrorType;
 
