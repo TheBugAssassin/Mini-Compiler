@@ -23,3 +23,26 @@ x||y;\n
 x<=y;\n
 x>=y;\n
 x=y;\n
+
+// Valid Special Characters
+&\n
+&var\n
+
+// Valid delimiters
+;\n
+{\n
+}\n
+(\n
+)\n
+[\n
+]\n
+()\n
+[]\n
+{}\n
+var[];\n
+var{};\n
+var();\n
+var({[35]});\n
+
+// Mixed example
+if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n
