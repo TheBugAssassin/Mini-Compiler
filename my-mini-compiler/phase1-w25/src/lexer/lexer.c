@@ -30,6 +30,9 @@ void print_error(ErrorType error, int line, const char *lexeme) {
         case ERROR_INVALID_IDENTIFIER:
             printf("Invalid identifier: '%s'\n", lexeme);
             break;
+        case ERROR_INVALID_OPERATOR:
+            printf("Invalid operator: '%s'\n", lexeme);
+            break;
         default:
             printf("Unknown error\n");
     }
@@ -150,7 +153,7 @@ Token get_next_token(const char *input, int *pos) {
     }
 
     // Handle identifiers and keywords
-    if (isalpha(c) || c == '_') { 
+    if (isalpha(c) || c == '_') {
     int i = 0;
     do {
         token.lexeme[i++] = c;
@@ -160,18 +163,34 @@ Token get_next_token(const char *input, int *pos) {
 
     token.lexeme[i] = '\0';
 
+    // Check for keyword first
     if (is_keyword(token.lexeme)) {
         token.type = TOKEN_KEYWORD;
     } 
     else {
-        token.type = TOKEN_IDENTIFIER;
-    }
-    
-    if (!isalnum(c) && c != '_' && c != '\0' && c != ' ' && c != '\n' && c != ';' && c != '(' && c != ')') {
-        token.error = ERROR_INVALID_CHAR;
-        token.lexeme[0] = c;
-        token.lexeme[1] = '\0';
-        (*pos)++;
+        char temp_lexeme[sizeof(token.lexeme)];
+        strncpy(temp_lexeme, token.lexeme, sizeof(token.lexeme));
+        temp_lexeme[strlen(token.lexeme)] = '\0';
+
+        int is_partial_keyword = 0;
+        for (int j = 1; j < strlen(temp_lexeme); j++) {
+            char temp_substr[sizeof(token.lexeme)];
+            strncpy(temp_substr, temp_lexeme, j);
+            temp_substr[j] = '\0';
+
+            if (is_keyword(temp_substr)) {
+                is_partial_keyword = 1;
+                break;
+            }
+        }
+
+        if (is_partial_keyword) {
+            token.type = TOKEN_ERROR;
+            token.error = ERROR_INVALID_IDENTIFIER;
+        } 
+        else {
+            token.type = TOKEN_IDENTIFIER;
+        }
     }
 
     return token;
@@ -196,46 +215,35 @@ Token get_next_token(const char *input, int *pos) {
     }
 
     // Handle operators
-    if (c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '!' || c == '&' || c == '|' || c == '<' || c == '>') {
-    if ((c == '=' || c == '!' || c == '<' || c == '>') && input[*pos + 1] == '=') {
-        token.type = TOKEN_OPERATOR;
-        token.lexeme[0] = c;
-        token.lexeme[1] = '=';
-        token.lexeme[2] = '\0';
-        (*pos) += 2; 
-        return token;
-    }
-    
-    if ((c == '&' || c == '|') && input[*pos + 1] == c) {
-        token.type = TOKEN_OPERATOR;
-        token.lexeme[0] = c;
-        token.lexeme[1] = c;
-        token.lexeme[2] = '\0';
-        (*pos) += 2; 
-        return token;
-    }
-    
-    if ((c == '+' && input[*pos + 1] == '-') || (c == '-' && input[*pos + 1] == '+')) {
-        token.type = TOKEN_OPERATOR;
-        token.lexeme[0] = '-';
-        token.lexeme[1] = '\0';
-        (*pos) += 2;
-        return token;
-    }
-    
-    if (input[*pos + 1] == c && (c == '+' || c == '-')) {
-        token.error = ERROR_CONSECUTIVE_OPERATORS;
-        token.lexeme[0] = c;
-        token.lexeme[1] = c;
-        token.lexeme[2] = '\0';
-        (*pos) += 2;
-        return token;
-    }
-    
-    token.type = TOKEN_OPERATOR;
+    if (strchr("+-*/=<>!&|", c)) {
+    int len = 1;
     token.lexeme[0] = c;
     token.lexeme[1] = '\0';
-    (*pos)++;
+
+    if ((c == '=' && input[*pos + 1] == '=') ||
+        (c == '!' && input[*pos + 1] == '=') ||
+        (c == '<' && input[*pos + 1] == '=') ||
+        (c == '>' && input[*pos + 1] == '=') ||
+        (c == '&' && input[*pos + 1] == '&') ||
+        (c == '|' && input[*pos + 1] == '|')) {
+
+        token.lexeme[1] = input[*pos + 1];
+        token.lexeme[2] = '\0';
+        len = 2;
+    }
+
+    if (strchr("+-*/=<>!&|", input[*pos + len])) {
+        token.lexeme[len] = input[*pos + len];
+        token.lexeme[len + 1] = '\0';
+
+        token.type = TOKEN_ERROR;
+        token.error = ERROR_INVALID_OPERATOR;
+        (*pos) += (len + 1);
+        return token;
+    }
+
+    token.type = TOKEN_OPERATOR;
+    (*pos) += len;
     return token;
     }
 
