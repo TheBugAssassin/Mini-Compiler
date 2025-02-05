@@ -9,7 +9,7 @@
 static int current_line = 1;
 static char last_token_type = 'x'; // For checking consecutive operators
 
-const char *keywords[] = {"if", "repeat", "until", "else", "while", "for", "continue", "return", NULL};
+const char *keywords[] = {"if", "else", "while", "for", "continue", "break", "return", NULL};
 
 /* Print error messages for lexical errors */
 void print_error(ErrorType error, int line, const char *lexeme) {
