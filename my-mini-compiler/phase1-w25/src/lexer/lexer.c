@@ -9,7 +9,7 @@
 static int current_line = 1;
 static char last_token_type = 'x'; // For checking consecutive operators
 
-const char *keywords[] = {"if", "repeat", "until", "else", "while", NULL};
+const char *keywords[] = {"if", "repeat", "until", "else", "while", "for", "continue", "return", NULL};
 
 /* Print error messages for lexical errors */
 void print_error(ErrorType error, int line, const char *lexeme) {
@@ -37,11 +37,6 @@ void print_error(ErrorType error, int line, const char *lexeme) {
             printf("Unknown error\n");
     }
 }
-
-/* Print token information
- *
- *  TODO Update your printing function accordingly
- */
 
 /* Print token information */
 void print_token(Token token) {
@@ -267,7 +262,7 @@ Token get_next_token(const char *input, int *pos) {
 // This is a basic lexer that handles numbers (e.g., "123", "456"), basic operators (+ and -), consecutive operator errors, whitespace and newlines, with simple line tracking for error reporting.
 
 int main() {
-    const char *input = "123 + 456 - 789\n1 ++ 2"; // Test with multi-line input
+    const char *input = "_Var;"; // Test with multi-line input
     int position = 0;
     Token token;
 
