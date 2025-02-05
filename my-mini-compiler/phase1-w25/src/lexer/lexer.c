@@ -64,6 +64,9 @@ void print_token(Token token) {
         case TOKEN_DELIMITER:
             printf("DELIMITER");
             break;
+        case TOKEN_SPECIAL:
+            printf("SPECIAL");
+            break;
         case TOKEN_EOF:
             printf("EOF");
             break;
@@ -124,71 +127,69 @@ Token get_next_token(const char *input, int *pos) {
 
     // Handle numbers
     if (isdigit(c)) {
-    int i = 0;
-    do {
-        token.lexeme[i++] = c;
-        (*pos)++;
-        c = input[*pos];
-    } while (isdigit(c) && i < sizeof(token.lexeme) - 1);
-
-    if (isalpha(c) || c == '_') {
-        token.error = ERROR_INVALID_IDENTIFIER;
-        while (isalnum(c) && i < sizeof(token.lexeme) - 1) {
+        int i = 0;
+        do {
             token.lexeme[i++] = c;
             (*pos)++;
             c = input[*pos];
-        }
-        token.lexeme[i] = '\0';
-        return token;
-    }
+        } while (isdigit(c) && i < sizeof(token.lexeme) - 1);
 
-    token.lexeme[i] = '\0';
-    token.type = TOKEN_NUMBER;
-    return token;
+        if (isalpha(c) || c == '_') {
+            token.error = ERROR_INVALID_IDENTIFIER;
+            while (isalnum(c) && i < sizeof(token.lexeme) - 1) {
+                token.lexeme[i++] = c;
+                (*pos)++;
+                c = input[*pos];
+            }
+            token.lexeme[i] = '\0';
+            return token;
+        }
+
+        token.lexeme[i] = '\0';
+        token.type = TOKEN_NUMBER;
+        return token;
     }
 
     // Handle identifiers and keywords
     if (isalpha(c) || c == '_') {
-    int i = 0;
-    do {
-        token.lexeme[i++] = c;
-        (*pos)++;
-        c = input[*pos];
-    } while ((isalnum(c) || c == '_') && i < sizeof(token.lexeme) - 1);
+        int i = 0;
+        do {
+            token.lexeme[i++] = c;
+            (*pos)++;
+            c = input[*pos];
+        } while ((isalnum(c) || c == '_') && i < sizeof(token.lexeme) - 1);
 
-    token.lexeme[i] = '\0';
+        token.lexeme[i] = '\0';
 
-    // Check for keyword first
-    if (is_keyword(token.lexeme)) {
-        token.type = TOKEN_KEYWORD;
-    } 
-    else {
-        char temp_lexeme[sizeof(token.lexeme)];
-        strncpy(temp_lexeme, token.lexeme, sizeof(token.lexeme));
-        temp_lexeme[strlen(token.lexeme)] = '\0';
+        // Check for keyword first
+        if (is_keyword(token.lexeme)) {
+            token.type = TOKEN_KEYWORD;
+        } else {
+            char temp_lexeme[sizeof(token.lexeme)];
+            strncpy(temp_lexeme, token.lexeme, sizeof(token.lexeme));
+            temp_lexeme[strlen(token.lexeme)] = '\0';
 
-        int is_partial_keyword = 0;
-        for (int j = 1; j < strlen(temp_lexeme); j++) {
-            char temp_substr[sizeof(token.lexeme)];
-            strncpy(temp_substr, temp_lexeme, j);
-            temp_substr[j] = '\0';
+            int is_partial_keyword = 0;
+            for (int j = 1; j < strlen(temp_lexeme); j++) {
+                char temp_substr[sizeof(token.lexeme)];
+                strncpy(temp_substr, temp_lexeme, j);
+                temp_substr[j] = '\0';
 
-            if (is_keyword(temp_substr)) {
-                is_partial_keyword = 1;
-                break;
+                if (is_keyword(temp_substr)) {
+                    is_partial_keyword = 1;
+                    break;
+                }
+            }
+
+            if (is_partial_keyword) {
+                token.type = TOKEN_ERROR;
+                token.error = ERROR_INVALID_IDENTIFIER;
+            } else {
+                token.type = TOKEN_IDENTIFIER;
             }
         }
 
-        if (is_partial_keyword) {
-            token.type = TOKEN_ERROR;
-            token.error = ERROR_INVALID_IDENTIFIER;
-        } 
-        else {
-            token.type = TOKEN_IDENTIFIER;
-        }
-    }
-
-    return token;
+        return token;
     }
 
     // Handle string literals
@@ -211,39 +212,48 @@ Token get_next_token(const char *input, int *pos) {
 
     // Handle operators
     if (strchr("+-*/=<>!&|", c)) {
-    int len = 1;
-    token.lexeme[0] = c;
-    token.lexeme[1] = '\0';
+        int len = 1;
+        token.lexeme[0] = c;
+        token.lexeme[1] = '\0';
 
-    if ((c == '=' && input[*pos + 1] == '=') ||
-        (c == '!' && input[*pos + 1] == '=') ||
-        (c == '<' && input[*pos + 1] == '=') ||
-        (c == '>' && input[*pos + 1] == '=') ||
-        (c == '&' && input[*pos + 1] == '&') ||
-        (c == '|' && input[*pos + 1] == '|')) {
+        if ((c == '=' && input[*pos + 1] == '=') ||
+            (c == '!' && input[*pos + 1] == '=') ||
+            (c == '<' && input[*pos + 1] == '=') ||
+            (c == '>' && input[*pos + 1] == '=') ||
+            (c == '&' && input[*pos + 1] == '&') ||
+            (c == '|' && input[*pos + 1] == '|')) {
 
-        token.lexeme[1] = input[*pos + 1];
-        token.lexeme[2] = '\0';
-        len = 2;
-    }
+            token.lexeme[1] = input[*pos + 1];
+            token.lexeme[2] = '\0';
+            len = 2;
+        }
 
-    if (strchr("+-*/=<>!&|", input[*pos + len])) {
-        token.lexeme[len] = input[*pos + len];
-        token.lexeme[len + 1] = '\0';
+        // Checks special case for & (singular)
+        if (c == '&' && input[*pos+1] != '&') {
+            token.type = TOKEN_SPECIAL;
+            token.lexeme[0] = c;
+            token.lexeme[1] = '\0';
+            (*pos)++;
+            return token;
+        }
 
-        token.type = TOKEN_ERROR;
-        token.error = ERROR_INVALID_OPERATOR;
-        (*pos) += (len + 1);
+        if (strchr("+-*/=<>!&|", input[*pos + len])) {
+            token.lexeme[len] = input[*pos + len];
+            token.lexeme[len + 1] = '\0';
+
+            token.type = TOKEN_ERROR;
+            token.error = ERROR_INVALID_OPERATOR;
+            (*pos) += (len + 1);
+            return token;
+        }
+
+        token.type = TOKEN_OPERATOR;
+        (*pos) += len;
         return token;
     }
 
-    token.type = TOKEN_OPERATOR;
-    (*pos) += len;
-    return token;
-    }
-
     // Handle delimiters
-    if (strchr(";(){}", c)) {
+    if (strchr(";(){}[]", c)) {
         token.type = TOKEN_DELIMITER;
         token.lexeme[0] = c;
         token.lexeme[1] = '\0';
@@ -262,7 +272,7 @@ Token get_next_token(const char *input, int *pos) {
 // This is a basic lexer that handles numbers (e.g., "123", "456"), basic operators (+ and -), consecutive operator errors, whitespace and newlines, with simple line tracking for error reporting.
 
 int main() {
-    const char *input = "_Var;"; // Test with multi-line input
+    const char *input = "if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
     int position = 0;
     Token token;
 
