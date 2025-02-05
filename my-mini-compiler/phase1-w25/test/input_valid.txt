@@ -1,0 +1,25 @@
+//Valid Keywords
+if (x==1);\n
+else (x==0);\n
+repeat until (x==1);\n
+while (x=1);\n
+
+//Valid Identifiers
+exVar = 1;\n
+_Var = 1;\n
+test_Var = 1;\n
+Var123 = 1;\n
+testFunc();\n
+
+//Valid Operators
+x+y;\n
+x-y;\n
+x*y;\n
+x/y;\n
+x==y;\n
+x!=y;\n
+x=1 && y=1;\n
+x||y;\n
+x<=y;\n
+x>=y;\n
+x=y;\n
