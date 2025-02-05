@@ -26,9 +26,9 @@ typedef enum {
     ERROR_CONSECUTIVE_OPERATORS,   // Multiple consecutive operators
     ERROR_UNTERMINATED_STRING,     // string not properly closed
     ERROR_UNEXPECTED_EOF,          // unexpected end of file
-    ERROR_IDENTIFIER_TOO_LONG,    // identifier length exceeds limit
-    ERROR_INVALID_IDENTIFIER        // Identifier starting with a number or containing invalid characters
-    ERROR_INVALID_OPERATOR          // operator contains invalid characters
+    ERROR_IDENTIFIER_TOO_LONG,     // identifier length exceeds limit
+    ERROR_INVALID_IDENTIFIER,      // Identifier starting with a number or containing invalid characters
+    ERROR_INVALID_OPERATOR         // operator contains invalid characters
 } ErrorType;
 
 /* Token structure to store token information
