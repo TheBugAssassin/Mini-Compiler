@@ -216,6 +216,7 @@ Token get_next_token(const char *input, int *pos) {
         token.lexeme[0] = c;
         token.lexeme[1] = '\0';
 
+        // Checks for relational operators
         if ((c == '=' && input[*pos + 1] == '=') ||
             (c == '!' && input[*pos + 1] == '=') ||
             (c == '<' && input[*pos + 1] == '=') ||
@@ -237,12 +238,13 @@ Token get_next_token(const char *input, int *pos) {
             return token;
         }
 
+        // 
         if (strchr("+-*/=<>!&|", input[*pos + len])) {
             token.lexeme[len] = input[*pos + len];
             token.lexeme[len + 1] = '\0';
 
             token.type = TOKEN_ERROR;
-            token.error = ERROR_INVALID_OPERATOR;
+            token.error = ERROR_CONSECUTIVE_OPERATORS;
             (*pos) += (len + 1);
             return token;
         }
@@ -272,7 +274,7 @@ Token get_next_token(const char *input, int *pos) {
 // This is a basic lexer that handles numbers (e.g., "123", "456"), basic operators (+ and -), consecutive operator errors, whitespace and newlines, with simple line tracking for error reporting.
 
 int main() {
-    const char *input = "if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
+    const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
     int position = 0;
     Token token;
 
