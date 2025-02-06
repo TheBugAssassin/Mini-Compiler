@@ -275,8 +275,7 @@ Token get_next_token(const char *input, int *pos) {
 
 int main() {
     //const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
-    const char *input = "if (64 / 8 == 8) print_error();  //do a bunch of specific operations with datastructures and methopd calls";
-    //const char *input = "while (running_average && /*see if this gets kicked out*/ (62 / 31  + 4)) {\n print(\"hello world\");\n}";
+    const char *input = "64.2345.3456";
     int position = 0;
     Token token;
 
