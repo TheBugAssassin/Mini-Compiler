@@ -18,5 +18,14 @@ x =>= y;\n
 x -+ y;\n
 x@ = 1;\n
 
+// String Literals
+"Hello world
+"r
+
+// Chars
+'r
+'Hello World'
+'Yes   '
+
 // Invalid Constants
 int snowman_height = 41.56..56.28

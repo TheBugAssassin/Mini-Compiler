@@ -9,7 +9,7 @@
 static int current_line = 1;
 static char last_token_type = 'x'; // For checking consecutive operators
 
-const char *keywords[] = {"int", "float", "double", "if", "else", "while", "for", "continue", "break", "return", "repeat", "until", NULL};
+const char *keywords[] = {"int", "char", "string", "float", "double", "printf", "if", "else", "while", "for", "continue", "break", "return", "repeat", "until", NULL};
 
 /* Print error messages for lexical errors */
 void print_error(ErrorType error, int line, const char *lexeme) {
@@ -32,6 +32,9 @@ void print_error(ErrorType error, int line, const char *lexeme) {
             break;
         case ERROR_INVALID_OPERATOR:
             printf("Invalid operator: '%s'\n", lexeme);
+            break;
+        case ERROR_CHAR_TOO_LONG:
+            printf("Char length exceeds 1\n");
             break;
         default:
             printf("Unknown error\n");
@@ -201,20 +204,30 @@ Token get_next_token(const char *input, int *pos) {
     }
 
     // Handle string literals
-    if (c == '"') {
+    if (c == '"' || c == '\'') {
         int i = 0;
+        char quote_type = c;
+
         (*pos)++;
-        while ((c = input[*pos]) != '"' && c != '\0' && i < sizeof(token.lexeme) - 1) {
-            token.lexeme[i++] = c;
+         while (input[*pos] != quote_type && input[*pos] != '\0' && i < sizeof(token.lexeme) - 1) {
+            token.lexeme[i++] = input[*pos];
             (*pos)++;
         }
-        if (c == '\0') {
+        
+        if (input[*pos] == '\0') {
             token.error = ERROR_UNTERMINATED_STRING;
-        } else {
-            (*pos)++; // Consume closing quote
-            token.lexeme[i] = '\0';
-            token.type = TOKEN_STRING;
+            return token;
+        } 
+
+        (*pos)++; // Consume closing quote
+
+        if (quote_type == '\'' && i > 1){           // Checking if char length is greater than one
+            token.error = ERROR_CHAR_TOO_LONG;
+            return token;
         }
+
+        token.lexeme[i] = '\0';
+        token.type = TOKEN_STRING;
         return token;
     }
 

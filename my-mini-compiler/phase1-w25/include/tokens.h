@@ -24,6 +24,7 @@ typedef enum {
     ERROR_INVALID_CHAR,            // unrecogonized character
     ERROR_INVALID_NUMBER,          // Malinformed numeric literal
     ERROR_CONSECUTIVE_OPERATORS,   // Multiple consecutive operators
+    ERROR_CHAR_TOO_LONG,           // Char exceeds limit
     ERROR_UNTERMINATED_STRING,     // string not properly closed                                                unimplemented
     ERROR_UNEXPECTED_EOF,          // unexpected end of file                                                    unimplemented
     ERROR_IDENTIFIER_TOO_LONG,     // identifier length exceeds limit                                           unimplemented
