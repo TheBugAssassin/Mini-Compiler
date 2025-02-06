@@ -19,7 +19,7 @@ void print_error(ErrorType error, int line, const char *lexeme) {
             printf("Invalid character '%s'\n", lexeme);
             break;
         case ERROR_INVALID_NUMBER:
-            printf("Invalid number format\n");
+            printf("Invalid number format %s\n", lexeme);
             break;
         case ERROR_CONSECUTIVE_OPERATORS:
             printf("Consecutive operators not allowed\n");
@@ -128,11 +128,19 @@ Token get_next_token(const char *input, int *pos) {
     // Handle numbers
     if (isdigit(c)) {
         int i = 0;
+        int dot = 0;
         do {
             token.lexeme[i++] = c;
             (*pos)++;
             c = input[*pos];
-        } while (isdigit(c) && i < sizeof(token.lexeme) - 1);
+            if (c == '.') {
+                if (dot) {
+                    token.lexeme[i] = c;
+                    token.error = ERROR_INVALID_NUMBER;
+                }
+                dot = 1;
+            }
+        } while ((isdigit(c) || c == '.') && i < sizeof(token.lexeme) - 1);
 
         if (isalpha(c) || c == '_') {
             token.error = ERROR_INVALID_IDENTIFIER;
@@ -275,7 +283,8 @@ Token get_next_token(const char *input, int *pos) {
 
 int main() {
     //const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
-    const char *input = "64.2345.3456";
+    const char *input = "41.56..56.28";
+    //const char *input = "while (running_average && /*see if this gets kicked out*/ (62 / 31  + 4)) {\n print(\"hello world\");\n}";
     int position = 0;
     Token token;
 
