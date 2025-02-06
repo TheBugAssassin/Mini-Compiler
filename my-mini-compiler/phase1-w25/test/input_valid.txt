@@ -1,3 +1,9 @@
+//Whitespace
+
+//Comments
+if (64 / 8 == 8) print_error();  //do a bunch of specific operations with datastructures and methopd calls
+while (running_average && /*see if this gets kicked out*/ (62 / 31  + 4)) {\n print(\"hello world\");\n}
+
 //Valid Keywords
 if (x==1);\n
 else (x==0);\n
