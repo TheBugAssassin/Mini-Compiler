@@ -67,7 +67,8 @@ char rrr = 'r';
 double snowman_height = 56.28;\n
 int age = 21;\n
 
-// Mixed Example
+// Mixed Examples
 if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n
 char x = "yes"
 char y = 'z'
+while (person_height == 56.23 || ((useful_function(person_weight) == 1)) {\n if (person_age >= 26) {\n return person_name;\n }\n else {\n string no_name = \"NO_NAME\";\n return NO_NAME;\n }\n person = person[id + 1]; \n}\n

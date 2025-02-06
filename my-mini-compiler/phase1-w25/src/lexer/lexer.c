@@ -296,7 +296,7 @@ Token get_next_token(const char *input, int *pos) {
 
 int main() {
     //const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
-    const char *input = "char *keyword = \"int\"";
+    const char *input = "while (person_height == 56.23 || ((useful_function(person_weight) == 1)) {\n if (person_age >= 26) {\n return person_name;\n }\n else {\n string no_name = \"NO_NAME\";\n return NO_NAME;\n }\n person = person[id + 1]; \n}\n";
     //const char *input = "while (running_average && /*see if this gets kicked out*/ (62 / 31  + 4)) {\n print(\"hello world\");\n}";
     int position = 0;
     Token token;
