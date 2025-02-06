@@ -52,8 +52,20 @@ var{};\n
 var();\n
 var({[35]});\n
 
+// String Literals
+"Hello World"
+"String"
+"int"
+
+// Chars
+'r'
+'x'
+'y'
+
 // Constants
 int snowman_height = 56.28
 
 // Mixed Example
 if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n
+char x = "yes"
+char y = 'z'
