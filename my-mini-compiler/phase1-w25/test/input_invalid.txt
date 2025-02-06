@@ -1,14 +1,15 @@
-//Invalid Keywords
+// Invalid Keywords
 elseA (x=1);\n
 repeatuntil (x=1);\n
 while123 (x=1);\n
 
-//Invalid Identifiers
+// Invalid Identifiers
 @Var = 1;\n
 test!Var = 1;\n
 1Var = 1;\n
+int snowman_height = f56.28f
 
-//Invalid Operators
+// Invalid Operators
 x ++ y;\n
 x &&& y;\n
 x |/| y;\n
@@ -17,3 +18,5 @@ x =>= y;\n
 x -+ y;\n
 x@ = 1;\n
 
+// Invalid Constants
+int snowman_height = 41.56..56.28

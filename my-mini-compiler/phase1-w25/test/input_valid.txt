@@ -1,25 +1,25 @@
-//Whitespace
+// Whitespace
 if         (86 \t\t\t / 2 + 7 == 50) print_error();               \n
 int order_book_size      =               19;    \n
 
-//Comments
+// Comments
 if (64 / 8 == 8) print_error();  //do a bunch of specific operations with datastructures and methopd calls
 while (running_average && /*see if this gets kicked out*/ (62 / 31  + 4)) {\n print(\"hello world\");\n}
 
-//Valid Keywords
+// Valid Keywords
 if (x==1);\n
 else (x==0);\n
 repeat until (x==1);\n
 while (x=1);\n
 
-//Valid Identifiers
+// Valid Identifiers
 exVar = 1;\n
 _Var = 1;\n
 test_Var = 1;\n
 Var123 = 1;\n
 testFunc();\n
 
-//Valid Operators
+// Valid Operators
 x+y;\n
 x-y;\n
 x*y;\n
@@ -36,7 +36,7 @@ x=y;\n
 &\n
 &var\n
 
-// Valid delimiters
+// Valid Delimiters
 ;\n
 {\n
 }\n
@@ -52,5 +52,8 @@ var{};\n
 var();\n
 var({[35]});\n
 
-// Mixed example
+// Constants
+int snowman_height = 56.28
+
+// Mixed Example
 if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n
