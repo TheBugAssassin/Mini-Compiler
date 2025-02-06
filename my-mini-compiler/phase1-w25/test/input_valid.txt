@@ -58,13 +58,14 @@ var({[35]});\n
 // String Literals
 "Hello World"
 "String"
-"int"
-'r'
+char *keyword = "int"
+char rrr = 'r';
 'x'
 'y'
 
 // Constants
-int snowman_height = 56.28
+double snowman_height = 56.28;\n
+int age = 21;\n
 
 // Mixed Example
 if (&var[28] == func(67) && _sample <= (2 - 4 + 8)) { return (28 - 7) };\n
