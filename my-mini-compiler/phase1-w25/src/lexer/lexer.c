@@ -296,7 +296,7 @@ Token get_next_token(const char *input, int *pos) {
 
 int main() {
     //const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
-    const char *input = "int _21sno23wman_height = f56.28f";
+    const char *input = "char character = 'a'";
     //const char *input = "while (running_average && /*see if this gets kicked out*/ (62 / 31  + 4)) {\n print(\"hello world\");\n}";
     int position = 0;
     Token token;

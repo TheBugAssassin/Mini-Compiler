@@ -1,7 +1,9 @@
 // Invalid Keywords
+iff (x==1) {};
 elseA (x=1);\n
 repeatuntil (x=1);\n
 while123 (x=1);\n
+int 123abc = 0;
 
 // Invalid Identifiers
 @Var = 1;\n
@@ -19,13 +21,14 @@ x -+ y;\n
 x@ = 1;\n
 
 // String Literals
-"Hello world
-"r
+char *string[] = \"Hello world;\n
+char *word[] = Hello \" World;\n
+"r;\n
+char test = 'r;\n
+char character = 'ad';\n
+'Hello World';\n
+'Yes   ';\n
 
-// Chars
-'r
-'Hello World'
-'Yes   '
-
-// Invalid Constants
+// Invalid Number
 int snowman_height = 41.56..56.28
+int abc = 0.31234.12
