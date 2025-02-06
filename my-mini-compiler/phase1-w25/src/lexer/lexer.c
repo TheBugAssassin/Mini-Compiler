@@ -238,7 +238,7 @@ Token get_next_token(const char *input, int *pos) {
             return token;
         }
 
-        // 
+        // Checks for consecutive operators
         if (strchr("+-*/=<>!&|", input[*pos + len])) {
             token.lexeme[len] = input[*pos + len];
             token.lexeme[len + 1] = '\0';
