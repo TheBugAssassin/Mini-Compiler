@@ -274,7 +274,8 @@ Token get_next_token(const char *input, int *pos) {
 // This is a basic lexer that handles numbers (e.g., "123", "456"), basic operators (+ and -), consecutive operator errors, whitespace and newlines, with simple line tracking for error reporting.
 
 int main() {
-    const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
+    //const char *input = "if (&var[28] == func(67) && _sample \n<= (2 - 4 + 8)) { return (28 - 7) };\n"; // Test with multi-line input
+    const char *input = "x++ y+;";
     int position = 0;
     Token token;
 
