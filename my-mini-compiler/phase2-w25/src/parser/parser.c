@@ -421,7 +421,7 @@ void print_ast(ASTNode *node, int level) {
             printf("While\n");
             break;
         case AST_REPEAT:
-            printf("Repeat-Until\n");
+            printf("RepeatUntil\n");
             break;
         case AST_BLOCK:
             printf("Block\n");
