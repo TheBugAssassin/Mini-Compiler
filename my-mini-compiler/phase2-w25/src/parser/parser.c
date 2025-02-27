@@ -14,7 +14,14 @@
 // - print statements: print x;
 // - blocks: { statement1; statement2; }
 // - factorial function: factorial(x)
-
+//------------------------------------------------------------------------------------------------------------------------Added code under
+static ASTNode *parse_if_statement(void);
+static ASTNode *parse_while_statement(void);
+static ASTNode *parse_repeat_statement(void);
+static ASTNode *parse_print_statement(void);
+static ASTNode *parse_block(void);
+static ASTNode *parse_factorial(void);
+//------------------------------------------------------------------------------------------------------------------------Added code above
 
 // Current token being processed
 static Token current_token;
@@ -47,6 +54,23 @@ static void parse_error(ParseError error, Token token) {
         case PARSE_ERROR_INVALID_EXPRESSION:
             printf("Invalid expression after '%s'\n", token.lexeme);
             break;
+//------------------------------------------------------------------------------------------------------------------------Added code under
+        case PARSE_ERROR_MISSING_PARENTHESIS:
+            printf("Missing parenthesis after '%s'\n", token.lexeme);
+            break;
+        case PARSE_ERROR_MISSING_CONDITION:
+            printf("Missing condition after '%s'\n", token.lexeme);
+            break;
+        case PARSE_ERROR_MISSING_BLOCK_BRACES:
+            printf("Missing block braces after '%s'\n", token.lexeme);
+            break;
+        case PARSE_ERROR_INVALID_OPERATOR:
+            printf("Invalid operator '%s'\n", token.lexeme);
+            break;
+        case PARSE_ERROR_FUNCTION_CALL_ERROR:
+            printf("Invalid function call '%s'\n", token.lexeme);
+            break;
+//------------------------------------------------------------------------------------------------------------------------Added code above
         default:
             printf("Unknown error\n");
     }
@@ -85,7 +109,8 @@ static void expect(TokenType type) {
 }
 
 // Forward declarations
-static ASTNode *parse_statement(void);
+// static ASTNode *parse_statement(void);
+// static ASTNode *parse_expression(void);
 
 // TODO 3: Add parsing functions for each new statement type
 // static ASTNode* parse_if_statement(void) { ... }
@@ -95,7 +120,85 @@ static ASTNode *parse_statement(void);
 // static ASTNode* parse_block(void) { ... }
 // static ASTNode* parse_factorial(void) { ... }
 
-static ASTNode *parse_expression(void);
+//------------------------------------------------------------------------------------------------------------------------Added code under
+static ASTNode *parse_if_statement(void) {
+    advance(); // consume 'if'
+    expect(TOKEN_LPAREN);
+    ASTNode *condition = parse_expression();
+    expect(TOKEN_RPAREN);
+    ASTNode *body = parse_block();
+
+    ASTNode *node = create_node(AST_IF);
+    node->left = condition;
+    node->right = body;
+    return node;
+}
+
+static ASTNode *parse_while_statement(void) {
+    advance(); // consume 'while'
+    expect(TOKEN_LPAREN);
+    ASTNode *condition = parse_expression();
+    expect(TOKEN_RPAREN);
+    ASTNode *body = parse_block();
+
+    ASTNode *node = create_node(AST_WHILE);
+    node->left = condition;
+    node->right = body;
+    return node;
+}
+
+static ASTNode *parse_repeat_statement(void) {
+    advance(); // consume 'repeat'
+    ASTNode *body = parse_block();
+    expect(TOKEN_UNTIL);
+    expect(TOKEN_LPAREN);
+    ASTNode *condition = parse_expression();
+    expect(TOKEN_RPAREN);
+
+    ASTNode *node = create_node(AST_REPEAT);
+    node->left = body;
+    node->right = condition;
+    return node;
+}
+
+static ASTNode *parse_print_statement(void) {
+    advance(); // consume 'print'
+    ASTNode *expr = parse_expression();
+    expect(TOKEN_SEMICOLON);
+
+    ASTNode *node = create_node(AST_PRINT);
+    node->left = expr;
+    return node;
+}
+
+static ASTNode *parse_block(void) {
+    expect(TOKEN_LBRACE);
+    ASTNode *block = create_node(AST_BLOCK);
+    ASTNode *current = block;
+
+    while (!match(TOKEN_RBRACE)) {
+        current->left = parse_statement();
+        if (!match(TOKEN_RBRACE)) {
+            current->right = create_node(AST_BLOCK);
+            current = current->right;
+        }
+    }
+    expect(TOKEN_RBRACE);
+    return block;
+}
+
+static ASTNode *parse_factorial(void) {
+    advance(); // consume 'factorial'
+    expect(TOKEN_LPAREN);
+    ASTNode *arg = parse_expression();
+    expect(TOKEN_RPAREN);
+    expect(TOKEN_SEMICOLON);
+
+    ASTNode *node = create_node(AST_FACTORIAL);
+    node->left = arg;
+    return node;
+}
+//------------------------------------------------------------------------------------------------------------------------Added code above
 
 // Parse variable declaration: int x;
 static ASTNode *parse_declaration(void) {
@@ -145,17 +248,34 @@ static ASTNode *parse_assignment(void) {
 static ASTNode *parse_statement(void) {
     if (match(TOKEN_INT)) {
         return parse_declaration();
-    } else if (match(TOKEN_IDENTIFIER)) {
+    }
+    else if (match(TOKEN_IDENTIFIER)) {
         return parse_assignment();
     }
-
     // TODO 4: Add cases for new statement types
     // else if (match(TOKEN_IF)) return parse_if_statement();
     // else if (match(TOKEN_WHILE)) return parse_while_statement();
     // else if (match(TOKEN_REPEAT)) return parse_repeat_statement();
     // else if (match(TOKEN_PRINT)) return parse_print_statement();
     // ...
-
+//------------------------------------------------------------------------------------------------------------------------Added code under
+    else if (match(TOKEN_IF)) {
+        return parse_if_statement();
+    }
+    else if (match(TOKEN_WHILE)) {
+        return parse_while_statement();
+    }
+    else if (match(TOKEN_REPEAT)) {
+        return parse_repeat_statement();
+    }
+    else if (match(TOKEN_PRINT)) {
+        return parse_print_statement();
+    }
+    else if (match(TOKEN_FACTORIAL)) {
+        return parse_factorial();
+    }
+    parse_error(PARSE_ERROR_UNEXPECTED_TOKEN, current_token);
+//------------------------------------------------------------------------------------------------------------------------Added code above
     printf("Syntax Error: Unexpected token\n");
     exit(1);
 }
@@ -170,22 +290,70 @@ static ASTNode *parse_statement(void) {
 // - Parentheses grouping
 // - Function calls
 
-static ASTNode *parse_expression(void) {
-    ASTNode *node;
+// static ASTNode *parse_expression(void) {
+//     ASTNode *node;
 
+//     if (match(TOKEN_NUMBER)) {
+//         node = create_node(AST_NUMBER);
+//         advance();
+//     } else if (match(TOKEN_IDENTIFIER)) {
+//         node = create_node(AST_IDENTIFIER);
+//         advance();
+//     } else {
+//         printf("Syntax Error: Expected expression\n");
+//         exit(1);
+//     }
+
+//     return node;
+// }
+
+//------------------------------------------------------------------------------------------------------------------------Added code below
+static ASTNode *parse_primary(void) {
     if (match(TOKEN_NUMBER)) {
-        node = create_node(AST_NUMBER);
+        ASTNode *node = create_node(AST_NUMBER);
         advance();
+        return node;
     } else if (match(TOKEN_IDENTIFIER)) {
-        node = create_node(AST_IDENTIFIER);
+        ASTNode *node = create_node(AST_IDENTIFIER);
         advance();
+        return node;
+    } else if (match(TOKEN_LPAREN)) {
+        advance();
+        ASTNode *expr = parse_expression();
+        expect(TOKEN_RPAREN);
+        return expr;
     } else {
-        printf("Syntax Error: Expected expression\n");
+        parse_error(PARSE_ERROR_INVALID_EXPRESSION, current_token);
         exit(1);
     }
+}
 
+static ASTNode *parse_term(void) {
+    ASTNode *node = parse_primary();
+    while (match(TOKEN_STAR) || match(TOKEN_SLASH)) {
+        ASTNode *opNode = create_node(AST_BINOP);
+        opNode->token = current_token;
+        advance();
+        opNode->left = node;
+        opNode->right = parse_primary();
+        node = opNode;
+    }
     return node;
 }
+
+static ASTNode *parse_expression(void) {
+    ASTNode *node = parse_term();
+    while (match(TOKEN_PLUS) || match(TOKEN_MINUS)) {
+        ASTNode *opNode = create_node(AST_BINOP);
+        opNode->token = current_token;
+        advance();
+        opNode->left = node;
+        opNode->right = parse_term();
+        node = opNode;
+    }
+    return node;
+}
+//------------------------------------------------------------------------------------------------------------------------Added code above
 
 // Parse program (multiple statements)
 static ASTNode *parse_program(void) {
@@ -239,13 +407,35 @@ void print_ast(ASTNode *node, int level) {
         case AST_IDENTIFIER:
             printf("Identifier: %s\n", node->token.lexeme);
             break;
-
         // TODO 6: Add cases for new node types
         // case AST_IF: printf("If\n"); break;
         // case AST_WHILE: printf("While\n"); break;
         // case AST_REPEAT: printf("Repeat-Until\n"); break;
         // case AST_BLOCK: printf("Block\n"); break;
         // case AST_BINOP: printf("BinaryOp: %s\n", node->token.lexeme); break;
+//------------------------------------------------------------------------------------------------------------------------Added code under
+        case AST_IF:
+            printf("If\n");
+            break;
+        case AST_WHILE:
+            printf("While\n");
+            break;
+        case AST_REPEAT:
+            printf("Repeat-Until\n");
+            break;
+        case AST_BLOCK:
+            printf("Block\n");
+            break;
+        case AST_PRINT:
+            printf("Print\n");
+            break;
+        case AST_FACTORIAL:
+            printf("Factorial\n");
+            break;
+        case AST_BINOP:
+            printf("BinaryOp: %s\n", node->token.lexeme);
+            break;
+//------------------------------------------------------------------------------------------------------------------------Added code above
         default:
             printf("Unknown node type\n");
     }
@@ -261,6 +451,17 @@ void free_ast(ASTNode *node) {
     free_ast(node->left);
     free_ast(node->right);
     free(node);
+}
+
+// Example of examining tokens
+void print_token_stream(const char* input) {
+    int position = 0;
+    Token token;
+    
+    do {
+        token = get_next_token(input, &position);
+        print_token(token);
+    } while (token.type != TOKEN_EOF);
 }
 
 // Main function for testing

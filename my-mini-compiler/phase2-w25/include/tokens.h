@@ -5,7 +5,11 @@
 typedef enum {
     TOKEN_EOF,
     TOKEN_NUMBER,      // e.g., "123", "456"
-    TOKEN_OPERATOR,    // +, -, *, /
+//    TOKEN_OPERATOR,    // +, -, *, /
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_STAR,
+    TOKEN_SLASH,
     TOKEN_IDENTIFIER,  // Variable names
     TOKEN_EQUALS,      // =
     TOKEN_SEMICOLON,   // ;
@@ -15,6 +19,10 @@ typedef enum {
     TOKEN_RBRACE,      // }
     TOKEN_IF,          // if keyword
     TOKEN_INT,         // int keyword
+    TOKEN_WHILE,       // while keyword
+    TOKEN_REPEAT,      // repeat keyword
+    TOKEN_UNTIL,       // until keyword
+    TOKEN_FACTORIAL,   // factorial keyword
     TOKEN_PRINT,       // print keyword
     TOKEN_ERROR
 } TokenType;

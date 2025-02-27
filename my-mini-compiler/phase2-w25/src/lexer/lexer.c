@@ -17,6 +17,10 @@ static struct {
 } keywords[] = {
     {"if", TOKEN_IF},
     {"int", TOKEN_INT},
+    {"while", TOKEN_WHILE},
+    {"repeat", TOKEN_REPEAT},
+    {"while", TOKEN_UNTIL},
+    {"factorial", TOKEN_FACTORIAL},
     {"print", TOKEN_PRINT}
 };
 
@@ -61,7 +65,10 @@ void print_token(Token token) {
     printf("Token: ");
     switch(token.type) {
         case TOKEN_NUMBER:     printf("NUMBER"); break;
-        case TOKEN_OPERATOR:   printf("OPERATOR"); break;
+        case TOKEN_PLUS:    printf("PLUS"); break;
+        case TOKEN_MINUS:   printf("MINUS"); break;
+        case TOKEN_STAR:    printf("STAR"); break;
+        case TOKEN_SLASH:   printf("SLASH"); break;
         case TOKEN_IDENTIFIER: printf("IDENTIFIER"); break;
         case TOKEN_EQUALS:     printf("EQUALS"); break;
         case TOKEN_SEMICOLON:  printf("SEMICOLON"); break;
@@ -139,14 +146,38 @@ Token get_next_token(const char* input, int* pos) {
     token.lexeme[1] = '\0';
 
     switch(c) {
-        case '+': case '-': case '*': case '/':
+        case '+':
+            token.type = TOKEN_PLUS;
             if (last_token_type == 'o') {
                 token.error = ERROR_CONSECUTIVE_OPERATORS;
                 return token;
             }
-            token.type = TOKEN_OPERATOR;
             last_token_type = 'o';
             break;
+        case '-':
+            token.type = TOKEN_MINUS;
+            if (last_token_type == 'o') {
+                token.error = ERROR_CONSECUTIVE_OPERATORS;
+                return token;
+            }
+            last_token_type = 'o';
+            break;
+        case '*':
+            token.type = TOKEN_STAR;
+            if (last_token_type == 'o') {
+                token.error = ERROR_CONSECUTIVE_OPERATORS;
+                return token;
+            }
+            last_token_type = 'o';
+            break;
+        case '/':
+            token.type = TOKEN_SLASH;
+            if (last_token_type == 'o') {
+                token.error = ERROR_CONSECUTIVE_OPERATORS;
+                return token;
+            }
+            last_token_type = 'o';
+            break;        
         case '=':
             token.type = TOKEN_EQUALS;
             break;

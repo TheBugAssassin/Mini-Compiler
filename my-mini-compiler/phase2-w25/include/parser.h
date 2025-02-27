@@ -12,7 +12,12 @@ typedef enum {
     AST_PRINT,          // Print statement
     AST_NUMBER,         // Number literal
     AST_IDENTIFIER,     // Variable name
-    // TODO: Add more node types as needed
+    AST_IF,
+    AST_WHILE,
+    AST_REPEAT,
+    AST_BLOCK,
+    AST_FACTORIAL,
+    AST_BINOP
 } ASTNodeType;
 
 typedef enum {
@@ -21,7 +26,12 @@ typedef enum {
     PARSE_ERROR_MISSING_SEMICOLON,
     PARSE_ERROR_MISSING_IDENTIFIER,
     PARSE_ERROR_MISSING_EQUALS,
-    PARSE_ERROR_INVALID_EXPRESSION
+    PARSE_ERROR_INVALID_EXPRESSION,
+    PARSE_ERROR_MISSING_PARENTHESIS,
+    PARSE_ERROR_MISSING_CONDITION,
+    PARSE_ERROR_MISSING_BLOCK_BRACES,
+    PARSE_ERROR_INVALID_OPERATOR,
+    PARSE_ERROR_FUNCTION_CALL_ERROR
 } ParseError;
 
 // AST Node structure
@@ -38,5 +48,8 @@ void parser_init(const char* input);
 ASTNode* parse(void);
 void print_ast(ASTNode* node, int level);
 void free_ast(ASTNode* node);
+
+static ASTNode *parse_statement(void);
+static ASTNode *parse_expression(void);
 
 #endif /* PARSER_H */
