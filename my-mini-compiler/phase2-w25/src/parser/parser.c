@@ -398,6 +398,7 @@ static ASTNode *parse_term(void) {
     return node;
 }
 
+// Handles factorial
 static ASTNode *parse_unary(void) {
     if (match(TOKEN_FACTORIAL)) {
         ASTNode *opNode = create_node(AST_FACTORIAL);
