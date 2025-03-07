@@ -17,7 +17,9 @@ typedef enum {
     AST_REPEAT,
     AST_BLOCK,
     AST_FACTORIAL,
-    AST_BINOP
+    AST_BINOP,
+    AST_COMPARISONOP,
+    AST_BOOLOP
 } ASTNodeType;
 
 typedef enum {
@@ -50,6 +52,12 @@ void print_ast(ASTNode* node, int level);
 void free_ast(ASTNode* node);
 
 static ASTNode *parse_statement(void);
+static ASTNode *parse_bool(void);
+static ASTNode *parse_join(void);
+static ASTNode *parse_equality(void);
+static ASTNode *parse_relational(void);
 static ASTNode *parse_expression(void);
+static ASTNode *parse_term(void);
+static ASTNode* parse_unary(void);
 
 #endif /* PARSER_H */
