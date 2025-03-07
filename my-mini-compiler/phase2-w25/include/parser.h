@@ -37,6 +37,17 @@ typedef enum {
     PARSE_ERROR_UNDECLARED_VARIABLE
 } ParseError;
 
+typedef struct Variable {
+    char *name;
+    struct Variable *next;
+} Variable;
+
+typedef struct Scope {
+    struct Scope *parent;
+    Variable *variables;   
+} Scope;
+
+
 extern Scope *current_scope;
 
 // Functions for Block Handling
