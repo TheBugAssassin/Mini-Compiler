@@ -5,6 +5,66 @@
 #include "../../include/lexer.h"
 #include "../../include/tokens.h"
 
+//Scope Functions
+Scope *current_scope = NULL;
+
+void enter_scope() {
+    Scope *new_scope = malloc(sizeof(Scope));
+    new_scope->variables = NULL;
+    new_scope->parent = current_scope;
+    current_scope = new_scope;
+}
+
+
+void exit_scope() {
+    if (current_scope) {
+        Variable *var = current_scope->variables;
+        while (var) {
+            var = var->next;
+        }
+        printf("\n");
+
+        var = current_scope->variables;
+        while (var) {
+            Variable *temp = var;
+            var = var->next;
+            free(temp);
+        }
+
+        Scope *old_scope = current_scope;
+        current_scope = current_scope->parent;
+
+        free(old_scope);
+    }
+}
+
+
+// Variable Decleration Function
+void declare_variable(const char *name) {
+    if (!current_scope) return;
+
+    Variable *var = malloc(sizeof(Variable));
+    var->name = strdup(name);
+    var->next = current_scope->variables;  
+    current_scope->variables = var;
+
+}
+
+int is_variable_declared(const char *name) {
+    Scope *scope = current_scope;
+    while (scope) {
+        Variable *var = scope->variables;
+        while (var) {
+            if (strcmp(var->name, name) == 0) {
+                return 1;
+            }
+            var = var->next;
+        }
+        scope = scope->parent;
+    }
+    return 0;
+}
+
 
 // TODO 1: Add more parsing function declarations for:
 // - if statements: if (condition) { ... }
@@ -74,6 +134,9 @@ static void parse_error(ParseError error, Token token) {
             break;
         case PARSE_ERROR_FUNCTION_CALL_ERROR:
             printf("Invalid function call '%s'\n", token.lexeme);
+            break;
+        case PARSE_ERROR_UNDECLARED_VARIABLE:
+            printf("Variable '%s' is not declared in scope\n", token.lexeme);
             break;
         //------------------------------------------------------------------------------------------------------------------------Added code above
         default:
@@ -178,17 +241,21 @@ static ASTNode *parse_print_statement(void) {
 
 static ASTNode *parse_block(void) {
     expect(TOKEN_LBRACE);
+    enter_scope();
+
     ASTNode *block = create_node(AST_BLOCK);
     ASTNode *current = block;
 
-    while (!match(TOKEN_RBRACE)) {
-        current->left = parse_statement();
+    while (!match(TOKEN_RBRACE) && current_token.type != TOKEN_EOF) {
+        current->left = parse_statement();  
         if (!match(TOKEN_RBRACE)) {
             current->right = create_node(AST_BLOCK);
             current = current->right;
         }
     }
+
     expect(TOKEN_RBRACE);
+    exit_scope();
     return block;
 }
 
@@ -213,39 +280,49 @@ static ASTNode *parse_declaration(void) {
 
     if (!match(TOKEN_IDENTIFIER)) {
         parse_error(PARSE_ERROR_MISSING_IDENTIFIER, current_token);
-        exit(1);
+        
     }
+
+    declare_variable(current_token.lexeme); 
 
     node->token = current_token;
     advance();
 
     if (!match(TOKEN_SEMICOLON)) {
         parse_error(PARSE_ERROR_MISSING_SEMICOLON, current_token);
-        exit(1);
+        
     }
     advance();
     return node;
 }
 
+
 // Parse assignment: x = 5;
 static ASTNode *parse_assignment(void) {
+
+    if (!is_variable_declared(current_token.lexeme)) {
+        parse_error(PARSE_ERROR_UNDECLARED_VARIABLE, current_token);
+        
+    }
+
     ASTNode *node = create_node(AST_ASSIGN);
     node->left = create_node(AST_IDENTIFIER);
     node->left->token = current_token;
-    advance();
 
-    if (!match(TOKEN_ASSIGN)) {
+    advance();
+    if (!match(TOKEN_EQUALS)) {
         parse_error(PARSE_ERROR_MISSING_EQUALS, current_token);
-        exit(1);
+        
     }
-    advance();
 
-    node->right = parse_bool();
+    advance();
+    node->right = parse_expression();
 
     if (!match(TOKEN_SEMICOLON)) {
         parse_error(PARSE_ERROR_MISSING_SEMICOLON, current_token);
-        exit(1);
+       
     }
+
     advance();
     return node;
 }
@@ -274,11 +351,12 @@ static ASTNode *parse_statement(void) {
         return parse_print_statement();
     } else if (match(TOKEN_FACTORIAL)) {
         return parse_factorial();
+    } else if (match(TOKEN_LBRACE)) {
+        return parse_block();
+    } else {
+        parse_error(PARSE_ERROR_UNEXPECTED_TOKEN, current_token);
+        exit(1);
     }
-    parse_error(PARSE_ERROR_UNEXPECTED_TOKEN, current_token);
-    //------------------------------------------------------------------------------------------------------------------------Added code above
-    printf("Syntax Error: Unexpected token\n");
-    exit(1);
 }
 
 // Parse expression (currently only handles numbers and identifiers)
@@ -293,19 +371,22 @@ static ASTNode *parse_statement(void) {
 //------------------------------------------------------------------------------------------------------------------------
 //Added code below
 
-// Handles nums, identifiers (vars), left parens
 static ASTNode *parse_primary(void) {
     if (match(TOKEN_NUMBER)) {
         ASTNode *node = create_node(AST_NUMBER);
         advance();
         return node;
     } else if (match(TOKEN_IDENTIFIER)) {
+        if (!is_variable_declared(current_token.lexeme)) {
+            parse_error(PARSE_ERROR_UNDECLARED_VARIABLE, current_token);
+        }
+
         ASTNode *node = create_node(AST_IDENTIFIER);
         advance();
         return node;
     } else if (match(TOKEN_LPAREN)) {
         advance();
-        ASTNode *expr = parse_bool();
+        ASTNode *expr = parse_expression();
         expect(TOKEN_RPAREN);
         return expr;
     } else {
