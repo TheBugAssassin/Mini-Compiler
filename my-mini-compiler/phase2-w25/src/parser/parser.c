@@ -132,7 +132,7 @@ static void parse_error(ParseError error, Token token) {
             printf("Missing block braces after '%s'\n", token.lexeme);
             break;
         case PARSE_ERROR_INVALID_OPERATOR:
-            printf("Invalid operator '%s'\n", token.lexeme);
+            printf("Invalid operator: '%s'\n", token.lexeme);
             break;
         case PARSE_ERROR_FUNCTION_CALL_ERROR:
             printf("Invalid function call '%s'\n", token.lexeme);
@@ -168,13 +168,35 @@ static int match(TokenType type) {
     return current_token.type == type;
 }
 
+// Function to handle errors such that it skips ahead so it can resume parsing to allow for more errors to be collected at once.
+static void error_recovery() {
+    // Skip tokens until a safe point is found.
+    while (current_token.type != TOKEN_EOF) {
+        if (match(TOKEN_SEMICOLON)) {
+            advance();
+            break;
+        }
+        // Check if current token is the beginning of a new statement.
+        if (current_token.type == TOKEN_INT ||
+            current_token.type == TOKEN_IF ||
+            current_token.type == TOKEN_WHILE ||
+            current_token.type == TOKEN_REPEAT ||
+            current_token.type == TOKEN_PRINT ||
+            current_token.type == TOKEN_IDENTIFIER ||
+            current_token.type == TOKEN_LBRACE) {
+            break;
+        }
+        advance();
+    }
+}
+
 // Expect a token type or error
 static void expect(TokenType type) {
     if (match(type)) {
         advance();
     } else {
         parse_error(PARSE_ERROR_UNEXPECTED_TOKEN, current_token);
-        exit(1); // Or implement error recovery
+        error_recovery();
     }
 }
 
@@ -282,7 +304,8 @@ static ASTNode *parse_declaration(void) {
 
     if (!match(TOKEN_IDENTIFIER)) {
         parse_error(PARSE_ERROR_MISSING_IDENTIFIER, current_token);
-        
+        error_recovery();
+        return NULL;
     }
 
     declare_variable(current_token.lexeme); 
@@ -292,7 +315,8 @@ static ASTNode *parse_declaration(void) {
 
     if (!match(TOKEN_SEMICOLON)) {
         parse_error(PARSE_ERROR_MISSING_SEMICOLON, current_token);
-        
+        error_recovery();
+        return NULL;
     }
     advance();
     return node;
@@ -304,7 +328,8 @@ static ASTNode *parse_assignment(void) {
 
     if (!is_variable_declared(current_token.lexeme)) {
         parse_error(PARSE_ERROR_UNDECLARED_VARIABLE, current_token);
-        
+        error_recovery();
+        return NULL;
     }
 
     ASTNode *node = create_node(AST_ASSIGN);
@@ -314,7 +339,8 @@ static ASTNode *parse_assignment(void) {
     advance();
     if (!match(TOKEN_EQ)) {
         parse_error(PARSE_ERROR_MISSING_EQUALS, current_token);
-        
+        error_recovery();
+        return NULL;
     }
 
     advance();
@@ -322,7 +348,8 @@ static ASTNode *parse_assignment(void) {
 
     if (!match(TOKEN_SEMICOLON)) {
         parse_error(PARSE_ERROR_MISSING_SEMICOLON, current_token);
-       
+        error_recovery();
+        return NULL;
     }
 
     advance();
@@ -357,7 +384,8 @@ static ASTNode *parse_statement(void) {
         return parse_block();
     } else {
         parse_error(PARSE_ERROR_UNEXPECTED_TOKEN, current_token);
-        exit(1);
+        error_recovery();
+        return NULL;
     }
 }
 
@@ -381,6 +409,8 @@ static ASTNode *parse_primary(void) {
     } else if (match(TOKEN_IDENTIFIER)) {
         if (!is_variable_declared(current_token.lexeme)) {
             parse_error(PARSE_ERROR_UNDECLARED_VARIABLE, current_token);
+            error_recovery();
+            return NULL;
         }
 
         ASTNode *node = create_node(AST_IDENTIFIER);
@@ -393,7 +423,8 @@ static ASTNode *parse_primary(void) {
         return expr;
     } else {
         parse_error(PARSE_ERROR_INVALID_EXPRESSION, current_token);
-        exit(1);
+        error_recovery();
+        return NULL;
     }
 }
 

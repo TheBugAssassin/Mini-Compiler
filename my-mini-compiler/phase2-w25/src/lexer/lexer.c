@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "../include/lexer.h"
+#include "../../include/lexer.h"
 
 static int current_line = 1;
 static char last_token_type = 'x';
