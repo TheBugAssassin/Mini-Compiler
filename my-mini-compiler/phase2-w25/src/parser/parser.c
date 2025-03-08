@@ -432,14 +432,14 @@ static ASTNode *parse_assignment(void) {
     node->left->token = current_token;
 
     advance();
-    if (!match(TOKEN_EQ)) {
+    if (!match(TOKEN_ASSIGN)) {
         parse_error(PARSE_ERROR_MISSING_EQUALS, current_token);
         error_recovery();
         return NULL;
     }
 
     advance();
-    node->right = parse_expression();
+    node->right = parse_bool();
 
     if (!match(TOKEN_SEMICOLON)) {
         parse_error(PARSE_ERROR_MISSING_SEMICOLON, current_token);
