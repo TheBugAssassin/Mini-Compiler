@@ -312,9 +312,9 @@ static ASTNode *parse_parameters(void) {
     }
     
     // Create identifier node for parameter name
-    ASTNode *ident = create_node(AST_IDENTIFIER);
-    ident->token = current_token;
-    param->left = ident;
+    ASTNode *identifier = create_node(AST_IDENTIFIER);
+    identifier->token = current_token;
+    param->left = identifier;
     
     // Add parameter to current scope
     declare_variable(current_token.lexeme);
@@ -345,24 +345,23 @@ static ASTNode *parse_function_declaration(void) {
     }
     advance(); // consume '('
 
-    ASTNode *param_list = NULL;
+    ASTNode *parameter_list = NULL;
     ASTNode *current_param = NULL;
     
     // Enter a new scope for parameters
     enter_scope();
     
-    // Parse parameter list until ')' is hit
+    // Parse parameter list until ')' is reachedd
     if (!match(TOKEN_RPAREN)) {
-        param_list = create_node(AST_BLOCK);  // Use block type for parameter list
-        current_param = param_list;
+        parameter_list = create_node(AST_BLOCK);  // Use block type for parameter list
+        current_param = parameter_list;
         
         do {
             current_param->left = parse_parameters();
             
-            // Check if there are more parameters
+            // Check if there are more parameters and create new node fo next parameter
             if (match(TOKEN_COMMA)) {
                 advance();  // Consume comma
-                // Create new node for next parameter
                 current_param->right = create_node(AST_BLOCK);
                 current_param = current_param->right;
             }
@@ -372,28 +371,23 @@ static ASTNode *parse_function_declaration(void) {
     if (!match(TOKEN_RPAREN)) {
         parse_error(PARSE_ERROR_MISSING_PARENTHESIS, current_token);
         error_recovery();
-        exit_scope();  // Don't forget to exit the parameter scope on error
+        exit_scope();
         return NULL;
     }
     advance(); // consume ')'
-    
-    // Store parameter list in the function node
-    node->right = param_list;
+    node->right = parameter_list;
     
     // Parse function body
     if (match(TOKEN_LBRACE)) {
-        // The function body will have access to parameters as they're in a parent scope
+        // Must access to parameters in body as they're in the same or parent scope
         node->left = parse_block();
     } else {
         parse_error(PARSE_ERROR_MISSING_BLOCK_BRACES, current_token);
         error_recovery();
-        exit_scope();  // Exit parameter scope on error
+        exit_scope();
         return NULL;
     }
-    
-    // Exit parameter scope
     exit_scope();
-
     return node;
 }
 
