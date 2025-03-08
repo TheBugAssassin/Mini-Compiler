@@ -110,6 +110,8 @@ void print_token(Token token) {
             break;
         case TOKEN_EOF: printf("EOF");
             break;
+        case TOKEN_COMMA: printf("COMMA");
+            break;
         default: printf("UNKNOWN");
     }
     printf(" | Lexeme: '%s' | Line: %d\n", token.lexeme, token.line);
@@ -276,6 +278,8 @@ Token get_next_token(const char *input, int *pos) {
         case '}':
             token.type = TOKEN_RBRACE;
             break;
+        case ',':
+            token.type = TOKEN_COMMA;
         default:
             token.error = ERROR_INVALID_CHAR;
             break;

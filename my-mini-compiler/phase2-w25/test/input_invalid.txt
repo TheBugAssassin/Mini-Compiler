@@ -16,8 +16,8 @@
     "int b;\n" 
     "b = a + 2;\n"
     "}\n"
-    "b = 5;\n"      // Error b isnt declared in scope
+    "b = 5;\n"      // Error b isn't declared in scope
     "}\n"
-    "y = 10;\n"      // Error y isnt declared in scope                  
-    "z = 15;\n"    // Error z isnt declared in scope
-    " = x;\n";     // Error y isnt declared in scope
+    "y = 10;\n"      // Error y isn't declared in scope                  
+    "z = 15;\n"    // Error z isn't declared in scope
+    " = x;\n";     // Error y isn't declared in scope

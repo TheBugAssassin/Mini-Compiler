@@ -31,7 +31,8 @@ typedef enum {
     TOKEN_UNTIL, // until keyword
     TOKEN_FACTORIAL, // factorial keyword
     TOKEN_PRINT, // print keyword
-    TOKEN_ERROR
+    TOKEN_ERROR,
+    TOKEN_COMMA // ,
 } TokenType;
 
 typedef enum {

@@ -20,7 +20,9 @@ typedef enum {
     AST_ADDRESS_OF,
     AST_BINOP,
     AST_COMPARISONOP,
-    AST_BOOLOP
+    AST_BOOLOP,
+    AST_FUNCDECL,
+    AST_PARAM
 } ASTNodeType;
 
 typedef enum {

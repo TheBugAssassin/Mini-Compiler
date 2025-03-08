@@ -1,10 +1,9 @@
 /* parser.c */
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../include/parser.h"
-
 #include <string.h>
-
+#include "../lexer/lexer.c"
+#include "../../include/parser.h"
 #include "../../include/lexer.h"
 
 //Scope Functions
@@ -16,7 +15,6 @@ void enter_scope() {
     new_scope->parent = current_scope;
     current_scope = new_scope;
 }
-
 
 void exit_scope() {
     if (current_scope) {
@@ -39,7 +37,6 @@ void exit_scope() {
         free(old_scope);
     }
 }
-
 
 // Variable Decleration Function
 void declare_variable(const char *name) {
@@ -67,7 +64,6 @@ int is_variable_declared(const char *name) {
     return 0;
 }
 
-
 // TODO 1: Add more parsing function declarations for:
 // - if statements: if (condition) { ... }
 // - while loops: while (condition) { ... }
@@ -88,13 +84,14 @@ static ASTNode *parse_block(void);
 
 static ASTNode *parse_factorial(void);
 
+static ASTNode *parse_function_declaration(void);
+
 //------------------------------------------------------------------------------------------------------------------------Added code above
 
 // Current token being processed
 static Token current_token;
 static int position = 0;
 static const char *source;
-
 
 static void parse_error(ParseError error, Token token) {
     // TODO 2: Add more error types for:
@@ -264,6 +261,7 @@ static ASTNode *parse_print_statement(void) {
 }
 
 static ASTNode *parse_block(void) {
+    // printf("test");
     expect(TOKEN_LBRACE);
     enter_scope();
 
@@ -295,6 +293,110 @@ static ASTNode *parse_factorial(void) {
     return node;
 }
 
+static ASTNode *parse_parameters(void) {
+    if (!match(TOKEN_INT)) {
+        parse_error(PARSE_ERROR_UNEXPECTED_TOKEN, current_token);
+        error_recovery();
+        return NULL;
+    }
+    
+    ASTNode *param = create_node(AST_PARAM);
+    param->token = current_token; // store the type (int)
+    advance(); // consume type
+    
+    // Handle parameter name
+    if (!match(TOKEN_IDENTIFIER)) {
+        parse_error(PARSE_ERROR_MISSING_IDENTIFIER, current_token);
+        error_recovery();
+        return NULL;
+    }
+    
+    // Create identifier node for parameter name
+    ASTNode *ident = create_node(AST_IDENTIFIER);
+    ident->token = current_token;
+    param->left = ident;
+    
+    // Add parameter to current scope
+    declare_variable(current_token.lexeme);
+    
+    advance(); // consume identifier
+    return param;
+}
+
+static ASTNode *parse_function_declaration(void) {
+    ASTNode *node = create_node(AST_FUNCDECL);
+    advance(); // consume 'int' or whatever return type
+    
+    if (!match(TOKEN_IDENTIFIER)) {
+        parse_error(PARSE_ERROR_MISSING_IDENTIFIER, current_token);
+        error_recovery();
+        return NULL;
+    }
+    
+    // Store function name
+    node->token = current_token;
+    advance(); // consume function name
+    
+    // Parse parameters
+    if (!match(TOKEN_LPAREN)) {
+        parse_error(PARSE_ERROR_MISSING_PARENTHESIS, current_token);
+        error_recovery();
+        return NULL;
+    }
+    advance(); // consume '('
+
+    ASTNode *param_list = NULL;
+    ASTNode *current_param = NULL;
+    
+    // Enter a new scope for parameters
+    enter_scope();
+    
+    // Parse parameter list until ')' is hit
+    if (!match(TOKEN_RPAREN)) {
+        param_list = create_node(AST_BLOCK);  // Use block type for parameter list
+        current_param = param_list;
+        
+        do {
+            current_param->left = parse_parameters();
+            
+            // Check if there are more parameters
+            if (match(TOKEN_COMMA)) {
+                advance();  // Consume comma
+                // Create new node for next parameter
+                current_param->right = create_node(AST_BLOCK);
+                current_param = current_param->right;
+            }
+        } while (match(TOKEN_INT) && !match(TOKEN_EOF));
+    }
+    
+    if (!match(TOKEN_RPAREN)) {
+        parse_error(PARSE_ERROR_MISSING_PARENTHESIS, current_token);
+        error_recovery();
+        exit_scope();  // Don't forget to exit the parameter scope on error
+        return NULL;
+    }
+    advance(); // consume ')'
+    
+    // Store parameter list in the function node
+    node->right = param_list;
+    
+    // Parse function body
+    if (match(TOKEN_LBRACE)) {
+        // The function body will have access to parameters as they're in a parent scope
+        node->left = parse_block();
+    } else {
+        parse_error(PARSE_ERROR_MISSING_BLOCK_BRACES, current_token);
+        error_recovery();
+        exit_scope();  // Exit parameter scope on error
+        return NULL;
+    }
+    
+    // Exit parameter scope
+    exit_scope();
+
+    return node;
+}
+
 //------------------------------------------------------------------------------------------------------------------------Added code above
 
 // Parse variable declaration: int x;
@@ -321,7 +423,6 @@ static ASTNode *parse_declaration(void) {
     advance();
     return node;
 }
-
 
 // Parse assignment: x = 5;
 static ASTNode *parse_assignment(void) {
@@ -358,8 +459,32 @@ static ASTNode *parse_assignment(void) {
 
 // Parse statement
 static ASTNode *parse_statement(void) {
+    // if (match(TOKEN_INT)) {
+    //     return parse_declaration();
     if (match(TOKEN_INT)) {
-        return parse_declaration();
+        // Need to "peak" here to see if this is a variable or function declaration, thus save state variables to be reloaded positions later
+        Token saved_token = current_token;
+        int saved_position = position;
+        
+        advance(); // consume 'int'
+        
+        if (match(TOKEN_IDENTIFIER)) {
+            advance(); // consume identifier
+            
+            if (match(TOKEN_LPAREN)) {
+                current_token = saved_token;
+                position = saved_position;
+                return parse_function_declaration();
+            } else {
+                current_token = saved_token;
+                position = saved_position;
+                return parse_declaration();
+            }
+        } else {
+            current_token = saved_token;
+            position = saved_position;
+            return parse_declaration(); // continue but invalid identifier
+        }
     } else if (match(TOKEN_IDENTIFIER)) {
         return parse_assignment();
     }
@@ -530,7 +655,6 @@ static ASTNode *parse_unary(void) {
     return parse_primary();
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------Added code above
 
 // Parse program (multiple statements)
@@ -611,17 +735,23 @@ void print_ast(ASTNode *node, int level) {
             printf("Factorial\n");
             break;
         case AST_BINOP:
-            printf("BinaryOp: %s\n", node->token.lexeme);
+            printf("BinaryOperation: %s\n", node->token.lexeme);
             break;
         case AST_COMPARISONOP:
-            printf("ComaprisonOp: %s\n", node->token.lexeme);
+            printf("ComaprisonOperation: %s\n", node->token.lexeme);
             break;
         case AST_BOOLOP:
-            printf("BoolOp: %s\n", node->token.lexeme);
+            printf("BooleanOperation: %s\n", node->token.lexeme);
+            break;
+        case AST_FUNCDECL:
+            printf("FunctionDeclare: %s\n", node->token.lexeme);
+            break;
+        case AST_PARAM:
+            printf("FunctionParameter: %s\n", node->token.lexeme);
             break;
         //------------------------------------------------------------------------------------------------------------------------Added code above
         default:
-            printf("Unknown node type\n");
+            printf("Unknown AST node type\n");
     }
 
     // Print children
@@ -658,8 +788,10 @@ int main() {
         "int var2;\n"
         "int var6;\n"
         "int otherVar;\n"
+        "otherVar = var2 + var6;"
         "int anotherVar;\n"
         "if (!27 && var2 < (27 + var6 > otherVar) || (anotherVar == 16) && var2 != 28 || 28 * 56 + 45 / 7 - 8) {}\n"
+        "int main(int a, int b) {int sum;}\n"
         "}"
     ;
 
