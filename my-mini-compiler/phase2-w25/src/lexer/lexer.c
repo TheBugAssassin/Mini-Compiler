@@ -84,6 +84,14 @@ void print_token(Token token) {
             break;
         case TOKEN_LT: printf("LESS THAN");
             break;
+        case TOKEN_OR: printf("OR");
+            break;
+        case TOKEN_AND: printf("AND");
+            break;
+        case TOKEN_ADDRESS: printf("ADDRESS");
+            break;
+        case TOKEN_FACTORIAL: printf("FACTORIAL");
+            break;
         case TOKEN_SEMICOLON: printf("SEMICOLON");
             break;
         case TOKEN_LPAREN: printf("LPAREN");
@@ -246,6 +254,7 @@ Token get_next_token(const char *input, int *pos) {
         case '!':
             token.type = TOKEN_FACTORIAL;
             last_token_type = '!';
+            break;
         case '<':
             token.type = TOKEN_LT;
             break;

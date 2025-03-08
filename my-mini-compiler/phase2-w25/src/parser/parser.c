@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../../include/parser.h"
+
+#include <string.h>
+
 #include "../../include/lexer.h"
-#include "../../include/tokens.h"
 
 //Scope Functions
 Scope *current_scope = NULL;
@@ -247,7 +249,7 @@ static ASTNode *parse_block(void) {
     ASTNode *current = block;
 
     while (!match(TOKEN_RBRACE) && current_token.type != TOKEN_EOF) {
-        current->left = parse_statement();  
+        current->left = parse_statement();
         if (!match(TOKEN_RBRACE)) {
             current->right = create_node(AST_BLOCK);
             current = current->right;
@@ -310,7 +312,7 @@ static ASTNode *parse_assignment(void) {
     node->left->token = current_token;
 
     advance();
-    if (!match(TOKEN_EQUALS)) {
+    if (!match(TOKEN_EQ)) {
         parse_error(PARSE_ERROR_MISSING_EQUALS, current_token);
         
     }
@@ -386,7 +388,7 @@ static ASTNode *parse_primary(void) {
         return node;
     } else if (match(TOKEN_LPAREN)) {
         advance();
-        ASTNode *expr = parse_expression();
+        ASTNode *expr = parse_bool();
         expect(TOKEN_RPAREN);
         return expr;
     } else {
@@ -615,7 +617,14 @@ int main() {
     const char *input = "int x;\n" // Valid declaration
             "x = 42;\n"; // Valid assignment;
     // TODO 8: Add more test cases and read from a file:
-    const char *invalid_input = "if (!27 && var2 < (27 + var6 < otherVar) || (anotherVar == 16) && var2 != 28 || 28 * 56 + 45 / 7 - 8) {}\n";
+    const char *invalid_input = "{\n"
+        "int var2;\n"
+        "int var6;\n"
+        "int otherVar;\n"
+        "int anotherVar;\n"
+        "if (!27 && var2 < (27 + var6 > otherVar) || (anotherVar == 16) && var2 != 28 || 28 * 56 + 45 / 7 - 8) {}\n"
+        "}"
+    ;
 
     printf("Parsing input:\n%s\n", invalid_input);
     parser_init(invalid_input);
