@@ -1,13 +1,5 @@
 //Block Handling test cases
 
-"int x;\n"         
-    "x = 42;\n"         
-
-    "{\n"
-    "int y;\n"
-    "y = 10;\n"
-    "x = y + 5;\n"
-    "}\n"
 
     "{\n"
     "int a;\n"
