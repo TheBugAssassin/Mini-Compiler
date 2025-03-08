@@ -489,6 +489,12 @@ static ASTNode *parse_unary(void) {
         advance();
         opNode->right = parse_primary();
         return opNode;
+    } else if (match(TOKEN_ADDRESS)) {
+        ASTNode *opNode = create_node(AST_ADDRESS_OF);
+        opNode->token = current_token;
+        advance();
+        opNode->right = parse_primary();
+        return opNode;
     }
     return parse_primary();
 }

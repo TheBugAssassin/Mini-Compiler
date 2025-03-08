@@ -17,6 +17,7 @@ typedef enum {
     AST_REPEAT,
     AST_BLOCK,
     AST_FACTORIAL,
+    AST_ADDRESS_OF,
     AST_BINOP,
     AST_COMPARISONOP,
     AST_BOOLOP
