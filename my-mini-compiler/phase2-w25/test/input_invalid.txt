@@ -20,4 +20,4 @@
     "}\n"
     "y = 10;\n"      // Error y isn't declared in scope                  
     "z = 15;\n"    // Error z isn't declared in scope
-    " = x;\n";     // Error y isn't declared in scope
+    "y = x;\n";     // Error y isn't declared in scope
