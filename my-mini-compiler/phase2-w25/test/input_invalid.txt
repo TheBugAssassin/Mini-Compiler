@@ -1,13 +1,5 @@
 //Block Handling test cases
 
-"int x;\n"         
-    "x = 42;\n"         
-
-    "{\n"
-    "int y;\n"
-    "y = 10;\n"
-    "x = y + 5;\n"
-    "}\n"
 
     "{\n"
     "int a;\n"
@@ -20,4 +12,4 @@
     "}\n"
     "y = 10;\n"      // Error y isn't declared in scope                  
     "z = 15;\n"    // Error z isn't declared in scope
-    " = x;\n";     // Error y isn't declared in scope
+    "y = x;\n";     // Error y isn't declared in scope
