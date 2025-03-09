@@ -84,7 +84,7 @@ static ASTNode *parse_block(void);
 
 static ASTNode *parse_factorial(void);
 
-static ASTNode *parse_function_declaration(void);
+static ASTNode *parse_functions(void);
 
 //------------------------------------------------------------------------------------------------------------------------Added code above
 
@@ -323,7 +323,7 @@ static ASTNode *parse_parameters(void) {
     return param;
 }
 
-static ASTNode *parse_function_declaration(void) {
+static ASTNode *parse_functions(void) {
     ASTNode *node = create_node(AST_FUNCDECL);
     advance(); // consume 'int' or whatever return type
     
@@ -468,7 +468,7 @@ static ASTNode *parse_statement(void) {
             if (match(TOKEN_LPAREN)) {
                 current_token = saved_token;
                 position = saved_position;
-                return parse_function_declaration();
+                return parse_functions();
             } else {
                 current_token = saved_token;
                 position = saved_position;
@@ -517,8 +517,7 @@ static ASTNode *parse_statement(void) {
 // - Operator precedence
 // - Parentheses grouping
 // - Function calls
-//------------------------------------------------------------------------------------------------------------------------
-//Added code below
+//------------------------------------------------------------------------------------------------------------------------Added code below
 
 static ASTNode *parse_primary(void) {
     if (match(TOKEN_NUMBER)) {
@@ -785,7 +784,7 @@ int main() {
         "otherVar = var2 + var6;"
         "int anotherVar;\n"
         "if (!27 && var2 < (27 + var6 > otherVar) || (anotherVar == 16) && var2 != 28 || 28 * 56 + 45 / 7 - 8) {}\n"
-        "int main(int a, int b) {int sum;}\n"
+        "int main(int sum, int a, int b) {\nsum = a + b;\n}\n"
         "}"
     ;
 
