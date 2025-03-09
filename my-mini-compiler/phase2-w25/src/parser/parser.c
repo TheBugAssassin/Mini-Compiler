@@ -781,10 +781,11 @@ int main() {
         "int var2;\n"
         "int var6;\n"
         "int otherVar;\n"
-        "otherVar = var2 + var6;"
+        "otherVar = var2 + var6;\n"
         "int anotherVar;\n"
         "if (!27 && var2 < (27 + var6 > otherVar) || (anotherVar == 16) && var2 != 28 || 28 * 56 + 45 / 7 - 8) {}\n"
         "int main(int sum, int a, int b) {\nsum = a + b;\n}\n"
+        "int i;\ni = 9;\nrepeat {i = i + 1;} until (i == 10)"
         "}"
     ;
 

@@ -16,6 +16,10 @@
 // END CASE
 
 // BEGIN CASE
+"int i = 9;\nrepeat {i = i + 1;} until (i == 10)"
+// END CASE
+
+// BEGIN CASE
 “{\n"
 "int var2;\n"
 "var2 = 5 ++6;\n"

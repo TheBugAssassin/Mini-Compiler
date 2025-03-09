@@ -17,7 +17,7 @@ static struct {
     {"int", TOKEN_INT},
     {"while", TOKEN_WHILE},
     {"repeat", TOKEN_REPEAT},
-    {"while", TOKEN_UNTIL},
+    {"until", TOKEN_UNTIL},
     {"factorial", TOKEN_FACTORIAL},
     {"print", TOKEN_PRINT}
 };
