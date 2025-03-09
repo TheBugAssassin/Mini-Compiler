@@ -1,1 +1,49 @@
+// BEGIN CASE
+"{\n"
+"int var2;\n"
+"int var6;\n"
+"int otherVar;\n"
+"int anotherVar;\n"
+"if (!27 && var2 < (27 + var6 > otherVar) || (anotherVar == 16) && var2 != 28 || 28 * 56 + 45 / 7 - 8) {}\n"
+"}"
+// END CASE
 
+// BEGIN CASE
+“int x;\n"
+"x = 42;\n"
+"if (x > 0) {\n"
+"print x;\n"
+"}\n"
+"while (x < 100) {\n"
+"x = x + 1;\n"
+}\n”
+// END CASE
+
+// BEGIN CASE
+"{\n"
+"int y;\n"
+"y = 10;\n"
+"function(y);\n"
+"}\n"
+// END CASE
+
+// BEGIN CASE
+"int x;\n"
+"x = 0;\n"
+"while (x < 5) {\n""
+"x = x + 1;\n"
+"}\n"
+// END CASE
+
+// BEGIN CASE
+"int x;\n"
+"x = 10;\n"
+"if (x > 0) {\n"
+"print x;\n"
+"}\n"
+// END CASE
+
+// BEGIN CASE
+"int x;\n"
+"x = 42;\n"
+// END CASE
