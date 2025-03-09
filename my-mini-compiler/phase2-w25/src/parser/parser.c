@@ -252,11 +252,11 @@ static ASTNode *parse_repeat_statement(void) {
 
 static ASTNode *parse_print_statement(void) {
     advance(); // consume 'print'
-    ASTNode *expr = parse_bool();
+    ASTNode *expression = parse_bool();
     expect(TOKEN_SEMICOLON);
 
     ASTNode *node = create_node(AST_PRINT);
-    node->left = expr;
+    node->left = expression;
     return node;
 }
 
@@ -282,7 +282,7 @@ static ASTNode *parse_block(void) {
 }
 
 static ASTNode *parse_factorial(void) {
-    advance(); // consume 'factorial'
+    advance(); // consume '!'
     expect(TOKEN_LPAREN);
     ASTNode *arg = parse_bool();
     expect(TOKEN_RPAREN);
