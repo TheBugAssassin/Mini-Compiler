@@ -24,7 +24,6 @@ static struct {
     {"until", TOKEN_UNTIL},
     {"factorial", TOKEN_FACTORIAL},
     {"print", TOKEN_PRINT},
-    {"int", TOKEN_KEYWORD}
 };
 
 static int is_keyword(const char *word) {

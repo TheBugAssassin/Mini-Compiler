@@ -24,7 +24,6 @@ static struct {
     {"while", TOKEN_UNTIL},
     {"factorial", TOKEN_FACTORIAL},
     {"print", TOKEN_PRINT},
-    {"int", TOKEN_KEYWORD}
 };
 
 static int is_keyword(const char *word) {
@@ -205,7 +204,7 @@ Token get_next_token(const char *input, int *pos) {
 
         // Check for keyword first
         if (is_keyword(token.lexeme)) {
-            token.type = TOKEN_KEYWORD;
+            token.type = is_keyword(token.lexeme);
         } else {
             char temp_lexeme[sizeof(token.lexeme)];
             strncpy(temp_lexeme, token.lexeme, sizeof(token.lexeme));
