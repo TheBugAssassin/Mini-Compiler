@@ -21,7 +21,7 @@ static struct {
     {"double", TOKEN_DOUBLE},
     {"while", TOKEN_WHILE},
     {"repeat", TOKEN_REPEAT},
-    {"until", TOKEN_UNTIL},
+    {"while", TOKEN_UNTIL},
     {"factorial", TOKEN_FACTORIAL},
     {"print", TOKEN_PRINT},
     {"int", TOKEN_KEYWORD}

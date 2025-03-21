@@ -1,0 +1,59 @@
+//Block Handling test cases
+
+// BEGIN CASE
+"{\n"
+"int a;\n"
+"a = 3;\n"
+"{\n"
+"int b;\n"
+"b = a + 2;\n"
+"}\n"
+"b = 5;\n"      // Error b isn't declared in scope
+"}\n"
+"y = 10;\n"      // Error y isn't declared in scope
+"z = 15;\n"    // Error z isn't declared in scope
+"y = x;\n";     // Error y isn't declared in scope
+// END CASE
+
+// BEGIN CASE
+“{\n"
+"int var2;\n"
+"var2 = 5 ++6;\n"
+"Var2 = 5"
+"}\n”
+// END CASE
+
+// BEGIN CASE
+“{\n"
+"int y\n"
+"y = 5\n"
+"if (y > ) {\n"
+"print y\n"
+"}\n"
+factorial(5;\n"
+"}\n”
+// END CASE
+
+// BEGIN CASE
+“if x > 0 {\n"
+"print x;\n"
+"}\n”
+// END CASE
+
+// BEGIN CASE
+“int x;\n"
+"x = (42;\n”
+// END CASE
+
+// BEGIN CASE
+“x 42;\n”
+// END CASE
+
+// BEGIN CASE
+“int ;\n”
+// END CASE
+
+// BEGIN CASE
+“int x\n"
+"x = 42;\n”
+// END CASE
