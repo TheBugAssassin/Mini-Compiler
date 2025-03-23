@@ -6,64 +6,6 @@
 #include "../../include/parser.h"
 
 
-//Scope Functions
-Scope *current_scope = NULL;
-
-void enter_parser_scope() {
-    Scope *new_scope = malloc(sizeof(Scope));
-    new_scope->variables = NULL;
-    new_scope->parent = current_scope;
-    current_scope = new_scope;
-}
-
-void exit_parser_scope() {
-    if (current_scope) {
-        Variable *var = current_scope->variables;
-        while (var) {
-            var = var->next;
-        }
-        printf("\n");
-
-        var = current_scope->variables;
-        while (var) {
-            Variable *temp = var;
-            var = var->next;
-            free(temp);
-        }
-
-        Scope *old_scope = current_scope;
-        current_scope = current_scope->parent;
-
-        free(old_scope);
-    }
-}
-
-// Variable Decleration Function
-void declare_variable(const char *name) {
-    if (!current_scope) return;
-
-    Variable *var = malloc(sizeof(Variable));
-    var->name = strdup(name);
-    var->next = current_scope->variables;  
-    current_scope->variables = var;
-
-}
-
-int is_variable_declared(const char *name) {
-    Scope *scope = current_scope;
-    while (scope) {
-        Variable *var = scope->variables;
-        while (var) {
-            if (strcmp(var->name, name) == 0) {
-                return 1;
-            }
-            var = var->next;
-        }
-        scope = scope->parent;
-    }
-    return 0;
-}
-
 // TODO 1: Add more parsing function declarations for:
 // - if statements: if (condition) { ... }
 // - while loops: while (condition) { ... }
@@ -267,7 +209,6 @@ static ASTNode *parse_print_statement(void) {
 static ASTNode *parse_block(void) {
     // printf("test");
     expect(TOKEN_LBRACE);
-    enter_parser_scope();
 
     ASTNode *block = create_node(AST_BLOCK);
     ASTNode *current = block;
@@ -281,7 +222,6 @@ static ASTNode *parse_block(void) {
     }
 
     expect(TOKEN_RBRACE);
-    exit_parser_scope();
     return block;
 }
 
@@ -303,26 +243,24 @@ static ASTNode *parse_parameters(void) {
         error_recovery();
         return NULL;
     }
-    
+
     ASTNode *param = create_node(AST_PARAM);
     param->token = current_token; // store the type (int)
     advance(); // consume type
-    
+
     // Handle parameter name
     if (!match(TOKEN_IDENTIFIER)) {
         parse_error(PARSE_ERROR_MISSING_IDENTIFIER, current_token);
         error_recovery();
         return NULL;
     }
-    
+
     // Create identifier node for parameter name
     ASTNode *identifier = create_node(AST_IDENTIFIER);
     identifier->token = current_token;
     param->left = identifier;
-    
-    // Add parameter to current scope
-    declare_variable(current_token.lexeme);
-    
+
+
     advance(); // consume identifier
     return param;
 }
@@ -330,17 +268,17 @@ static ASTNode *parse_parameters(void) {
 static ASTNode *parse_functions(void) {
     ASTNode *node = create_node(AST_FUNCDECL);
     advance(); // consume 'int' or whatever return type
-    
+
     if (!match(TOKEN_IDENTIFIER)) {
         parse_error(PARSE_ERROR_MISSING_IDENTIFIER, current_token);
         error_recovery();
         return NULL;
     }
-    
+
     // Store function name
     node->token = current_token;
     advance(); // consume function name
-    
+
     // Parse parameters
     if (!match(TOKEN_LPAREN)) {
         parse_error(PARSE_ERROR_MISSING_PARENTHESIS, current_token);
@@ -351,36 +289,32 @@ static ASTNode *parse_functions(void) {
 
     ASTNode *parameter_list = NULL;
     ASTNode *current_param = NULL;
-    
-    // Enter a new scope for parameters
-    enter_parser_scope();
-    
+
     // Parse parameter list until ')' is reachedd
     if (!match(TOKEN_RPAREN)) {
-        parameter_list = create_node(AST_BLOCK);  // Use block type for parameter list
+        parameter_list = create_node(AST_BLOCK); // Use block type for parameter list
         current_param = parameter_list;
-        
+
         do {
             current_param->left = parse_parameters();
-            
+
             // Check if there are more parameters and create new node fo next parameter
             if (match(TOKEN_COMMA)) {
-                advance();  // Consume comma
+                advance(); // Consume comma
                 current_param->right = create_node(AST_BLOCK);
                 current_param = current_param->right;
             }
         } while (match(TOKEN_INT) && !match(TOKEN_EOF));
     }
-    
+
     if (!match(TOKEN_RPAREN)) {
         parse_error(PARSE_ERROR_MISSING_PARENTHESIS, current_token);
         error_recovery();
-        exit_parser_scope();
         return NULL;
     }
     advance(); // consume ')'
     node->right = parameter_list;
-    
+
     // Parse function body
     if (match(TOKEN_LBRACE)) {
         // Must access to parameters in body as they're in the same or parent scope
@@ -388,10 +322,9 @@ static ASTNode *parse_functions(void) {
     } else {
         parse_error(PARSE_ERROR_MISSING_BLOCK_BRACES, current_token);
         error_recovery();
-        exit_parser_scope();
         return NULL;
     }
-    exit_parser_scope();
+
     return node;
 }
 
@@ -408,8 +341,6 @@ static ASTNode *parse_declaration(void) {
         return NULL;
     }
 
-    declare_variable(current_token.lexeme); 
-
     node->token = current_token;
     advance();
 
@@ -424,13 +355,6 @@ static ASTNode *parse_declaration(void) {
 
 // Parse assignment: x = 5;
 static ASTNode *parse_assignment(void) {
-
-    if (!is_variable_declared(current_token.lexeme)) {
-        parse_error(PARSE_ERROR_UNDECLARED_VARIABLE, current_token);
-        error_recovery();
-        return NULL;
-    }
-
     ASTNode *node = create_node(AST_ASSIGN);
     node->left = create_node(AST_IDENTIFIER);
     node->left->token = current_token;
@@ -463,12 +387,12 @@ static ASTNode *parse_statement(void) {
         // Need to "peak" here to see if this is a variable or function declaration, thus save state variables to be reloaded positions later
         Token saved_token = current_token;
         int saved_position = position;
-        
+
         advance(); // consume 'int'
-        
+
         if (match(TOKEN_IDENTIFIER)) {
             advance(); // consume identifier
-            
+
             if (match(TOKEN_LPAREN)) {
                 current_token = saved_token;
                 position = saved_position;
@@ -529,12 +453,6 @@ static ASTNode *parse_primary(void) {
         advance();
         return node;
     } else if (match(TOKEN_IDENTIFIER)) {
-        if (!is_variable_declared(current_token.lexeme)) {
-            parse_error(PARSE_ERROR_UNDECLARED_VARIABLE, current_token);
-            error_recovery();
-            return NULL;
-        }
-
         ASTNode *node = create_node(AST_IDENTIFIER);
         advance();
         return node;

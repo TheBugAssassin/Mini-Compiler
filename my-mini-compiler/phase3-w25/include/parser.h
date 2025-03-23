@@ -40,24 +40,6 @@ typedef enum {
     PARSE_ERROR_UNDECLARED_VARIABLE
 } ParseError;
 
-typedef struct Variable {
-    char *name;
-    struct Variable *next;
-} Variable;
-
-typedef struct Scope {
-    struct Scope *parent;
-    Variable *variables;   
-} Scope;
-
-
-extern Scope *current_scope;
-
-// Functions for Block Handling
-void enter_parser_scope();
-void exit_parser_scope();
-void declare_variable(const char *name);
-int is_variable_declared(const char *name);
 
 // AST Node structure
 typedef struct ASTNode {
