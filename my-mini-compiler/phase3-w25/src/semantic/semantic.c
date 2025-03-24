@@ -6,36 +6,37 @@
 #include "../../include/semantic.h"
 
 // =============== BEGIN STEP 4 ===============
-void semantic_error(SemanticErrorType error, const char* name, int line) {
+void semantic_error(SemanticErrorType error, const char *name, int line) {
     printf("Semantic Error at line %d: ", line);
 
     switch (error) {
         case SEM_ERROR_UNDECLARED_VARIABLE:
             printf("Undeclared variable '%s'\n", name);
-        break;
+            break;
         case SEM_ERROR_REDECLARED_VARIABLE:
             printf("Variable '%s' already declared in this scope\n", name);
-        break;
+            break;
         case SEM_ERROR_TYPE_MISMATCH:
             printf("Type mismatch involving '%s'\n", name);
-        break;
+            break;
         case SEM_ERROR_UNINITIALIZED_VARIABLE:
             printf("Variable '%s' may be used uninitialized\n", name);
-        break;
+            break;
         case SEM_ERROR_INVALID_OPERATION:
             printf("Invalid operation involving '%s'\n", name);
-        break;
+            break;
         default:
             printf("Unknown semantic error with '%s'\n", name);
     }
 }
+
 // =============== END STEP 4 ===============
 
 // =============== BEGIN STEP 2 ===============
 // Initialize a new symbol table
 // Creates an empty symbol table structure with scope level set to 0
 SymbolTable *init_symbol_table() {
-    SymbolTable* table = malloc(sizeof(SymbolTable));
+    SymbolTable *table = malloc(sizeof(SymbolTable));
     if (table) {
         table->head = NULL;
         table->current_scope = 0;
@@ -43,19 +44,21 @@ SymbolTable *init_symbol_table() {
     return table;
 }
 
-void symbol_table_dump(SymbolTable* table) {
+void symbol_table_dump(SymbolTable *table) {
     printf("== SYMBOL TABLE DUMP ==\n");
-    printf("Total symbols: %lu\n", sizeof(*table) / sizeof(table[0]));
-    int index = 0;
+    printf("Total symbols: %lu\n\n", sizeof(*table) / sizeof(table[0]));
+    unsigned int index = 0;
     Symbol *current_symbol = table->head;
     while (current_symbol != NULL) {
-        printf(
-            "Symbol[%d]\n"
-            "Name: %s\n"
-            "Type: %s\n"
-            "Line Declared: %d\n",
-            "Intitialized: %s\n",
-            index, current_symbol->name, current_symbol->type, current_symbol->line_declared, (current_symbol->line_declared ? "Yes" : "No"));
+        printf("Symbol[%u]\n", index);
+        printf("Name: %s\n", current_symbol->name);
+        printf("Type: %d\n", current_symbol->type);
+        printf("Line Declared: %d\n", current_symbol->line_declared);
+        if (current_symbol->is_initialized) {
+            printf("Initialized: Yes\n");
+        } else {
+            printf("Initialized: No\n");
+        }
         index++;
         current_symbol = current_symbol->next;
     }
@@ -65,7 +68,7 @@ void symbol_table_dump(SymbolTable* table) {
 // Add a symbol to the table
 // Inserts a new variable with given name, type, and line number into the current scope
 void add_symbol(SymbolTable *table, const char *name, int type, int line) {
-    Symbol* symbol = malloc(sizeof(Symbol));
+    Symbol *symbol = malloc(sizeof(Symbol));
     if (symbol) {
         strcpy(symbol->name, name);
         symbol->type = type;
@@ -83,7 +86,7 @@ void add_symbol(SymbolTable *table, const char *name, int type, int line) {
 // Searches for a variable by name across all accessible scopes
 // Returns the symbol if found, NULL otherwise
 Symbol *lookup_symbol(SymbolTable *table, const char *name) {
-    Symbol* current = table->head;
+    Symbol *current = table->head;
     while (current) {
         if (strcmp(current->name, name) == 0) {
             return current;
@@ -94,13 +97,13 @@ Symbol *lookup_symbol(SymbolTable *table, const char *name) {
 }
 
 // Look up symbol in current scope only
-Symbol* lookup_symbol_current_scope(SymbolTable* table, const char* name) {
-    Symbol* current = table->head;
+Symbol *lookup_symbol_current_scope(SymbolTable *table, const char *name) {
+    Symbol *current = table->head;
     while (current) {
         if (strcmp(current->name, name) == 0 &&
             current->scope_level == table->current_scope) {
             return current;
-            }
+        }
         current = current->next;
     }
     return NULL;
@@ -122,7 +125,7 @@ void exit_scope(SymbolTable *table) {
 // Remove symbols from the current scope
 // Cleans up symbols that are no longer accessible after leaving a scope
 void remove_symbols_in_current_scope(SymbolTable *table) {
-    Symbol* current_symbol = table->head;
+    Symbol *current_symbol = table->head;
     while (current_symbol != NULL) {
         if (current_symbol->scope_level == table->current_scope) {
             free(current_symbol);
@@ -140,13 +143,14 @@ void free_symbol_table(SymbolTable *table) {
         current_symbol = current_symbol->next;
     }
 }
+
 // =============== END STEP 2 ===============
 
 // =============== BEGIN STEP 3 ===============
 
 // Analyze AST semantically
-int analyze_semantics(ASTNode* ast) {
-    SymbolTable* table = init_symbol_table();
+int analyze_semantics(ASTNode *ast) {
+    SymbolTable *table = init_symbol_table();
     int result = check_program(ast, table);
     symbol_table_dump(table);
     free_symbol_table(table);
@@ -154,7 +158,7 @@ int analyze_semantics(ASTNode* ast) {
 }
 
 // Check program node
-int check_program(ASTNode* node, SymbolTable* table) {
+int check_program(ASTNode *node, SymbolTable *table) {
     if (!node) return 1;
 
     int result = 1;
@@ -175,15 +179,15 @@ int check_program(ASTNode* node, SymbolTable* table) {
 }
 
 // Check declaration node
-int check_declaration(ASTNode* node, SymbolTable* table) {
+int check_declaration(ASTNode *node, SymbolTable *table) {
     if (node->type != AST_VARDECL) {
         return 0;
     }
 
-    const char* name = node->token.lexeme;
+    const char *name = node->token.lexeme;
 
     // Check if variable already declared in current scope
-    Symbol* existing = lookup_symbol_current_scope(table, name);
+    Symbol *existing = lookup_symbol_current_scope(table, name);
     if (existing) {
         semantic_error(SEM_ERROR_REDECLARED_VARIABLE, name, node->token.line);
         return 0;
@@ -194,24 +198,26 @@ int check_declaration(ASTNode* node, SymbolTable* table) {
     return 1;
 }
 
-int check_statement(ASTNode* node, SymbolTable* table) {
+int check_statement(ASTNode *node, SymbolTable *table) {
+    check_declaration(node, table);
+    check_assignment(node, table);
     return 1;
 }
 
-int check_expression(ASTNode* node, SymbolTable* table) {
+int check_expression(ASTNode *node, SymbolTable *table) {
     return 1;
 }
 
 // Check assignment node
-int check_assignment(ASTNode* node, SymbolTable* table) {
+int check_assignment(ASTNode *node, SymbolTable *table) {
     if (node->type != AST_ASSIGN || !node->left || !node->right) {
         return 0;
     }
 
-    const char* name = node->left->token.lexeme;
+    const char *name = node->left->token.lexeme;
 
     // Check if variable exists
-    Symbol* symbol = lookup_symbol(table, name);
+    Symbol *symbol = lookup_symbol(table, name);
     if (!symbol) {
         semantic_error(SEM_ERROR_UNDECLARED_VARIABLE, name, node->token.line);
         return 0;
@@ -239,14 +245,14 @@ int main() {
     //                     "    print y;\n"
     //                     "}\n";
 
-    const char* input = "int x;\n"
-                        "x = 42;\n";
+    const char *input = "int x;\n"
+            "x = 42;\n";
 
     printf("Analyzing input:\n%s\n\n", input);
 
     // Lexical analysis and parsing
     parser_init(input);
-    ASTNode* ast = parse();
+    ASTNode *ast = parse();
 
     printf("\nAbstract Syntax Tree:\n");
     print_ast(ast, 0);
