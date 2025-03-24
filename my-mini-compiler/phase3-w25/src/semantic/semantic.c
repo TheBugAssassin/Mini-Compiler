@@ -199,9 +199,10 @@ int check_declaration(ASTNode *node, SymbolTable *table) {
 }
 
 int check_statement(ASTNode *node, SymbolTable *table) {
-    check_declaration(node, table);
-    check_assignment(node, table);
-    return 1;
+    int result = 1;
+    result = check_declaration(node, table) && result;
+    result = check_assignment(node, table) && result;
+    return result;
 }
 
 int check_expression(ASTNode *node, SymbolTable *table) {
@@ -246,7 +247,8 @@ int main() {
     //                     "}\n";
 
     const char *input = "int x;\n"
-            "x = 42;\n";
+            "x = 42;\n"
+            "y = 45;\n";
 
     printf("Analyzing input:\n%s\n\n", input);
 
