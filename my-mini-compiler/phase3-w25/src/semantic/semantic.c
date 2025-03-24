@@ -56,7 +56,8 @@ void symbol_table_dump(SymbolTable *table) {
         printf("Line Declared: %d\n", current_symbol->line_declared);
         if (current_symbol->is_initialized) {
             printf("Initialized: Yes\n");
-        } else {
+        }
+        else {
             printf("Initialized: No\n");
         }
         index++;
@@ -85,15 +86,30 @@ void add_symbol(SymbolTable *table, const char *name, int type, int line) {
 // Look up a symbol in the table
 // Searches for a variable by name across all accessible scopes
 // Returns the symbol if found, NULL otherwise
+// Symbol *lookup_symbol(SymbolTable *table, const char *name) {
+//     Symbol *current = table->head;
+//     while (current) {
+//         if (strcmp(current->name, name) == 0) {
+//             return current;
+//         }
+//         current = current->next;
+//     }
+//     return NULL;
+// }
+
 Symbol *lookup_symbol(SymbolTable *table, const char *name) {
     Symbol *current = table->head;
+    Symbol *best_match = NULL;
+
     while (current) {
         if (strcmp(current->name, name) == 0) {
-            return current;
+            if (current->scope_level <= table->current_scope) {
+                best_match = current;
+            }
         }
         current = current->next;
     }
-    return NULL;
+    return best_match;
 }
 
 // Look up symbol in current scope only
@@ -118,7 +134,25 @@ void enter_scope(SymbolTable *table) {
 // Exit the current scope
 // Decrements the current scope level when leaving a block
 // Optionally removes symbols that are no longer in scope
+// void exit_scope(SymbolTable *table) {
+//     table->current_scope--;
+// }
+
 void exit_scope(SymbolTable *table) {
+    Symbol **previous = &table->head;
+    Symbol *current = table->head;
+
+    while (current != NULL) {
+        if (current->scope_level == table->current_scope) {
+            *previous = current->next;
+            free(current);
+            current = *previous;
+        }
+        else {
+            previous = &current->next;
+            current = current->next;
+        }
+    }
     table->current_scope--;
 }
 
@@ -174,7 +208,6 @@ int check_program(ASTNode *node, SymbolTable *table) {
             result = check_program(node->right, table) && result;
         }
     }
-
     return result;
 }
 
@@ -198,11 +231,36 @@ int check_declaration(ASTNode *node, SymbolTable *table) {
     return 1;
 }
 
+// int check_statement(ASTNode *node, SymbolTable *table) {
+//     check_declaration(node, table);
+//     check_assignment(node, table);
+//     return 1;
+// }
+
 int check_statement(ASTNode *node, SymbolTable *table) {
-    int result = 1;
-    result = check_declaration(node, table) && result;
-    result = check_assignment(node, table) && result;
-    return result;
+    if (!node) return 1;
+
+    if (node->type == AST_IF || node->type == AST_WHILE) {
+        enter_scope(table);
+        check_statement(node->left, table);
+        check_statement(node->right, table);
+        exit_scope(table);
+    }
+    else if (node->type == AST_VARDECL) {
+        return check_declaration(node, table);
+    }
+    else if (node->type == AST_ASSIGN) {
+        return check_assignment(node, table);
+    }
+    else if (node->type == AST_PRINT) {
+        const char *name = node->left->token.lexeme;
+        Symbol *symbol = lookup_symbol(table, name);
+        if (!symbol) {
+            semantic_error(SEM_ERROR_UNDECLARED_VARIABLE, name, node->token.line);
+            return 0;
+        }
+    }
+    return 1;
 }
 
 int check_expression(ASTNode *node, SymbolTable *table) {
@@ -238,17 +296,18 @@ int check_assignment(ASTNode *node, SymbolTable *table) {
 // =============== END STEP 3 ===============
 
 int main() {
-    // const char* input = "int x;\n"
-    //                     "x = 42;\n"
-    //                     "if (x > 0) {\n"
-    //                     "    int y;\n"
-    //                     "    y = x + 10;\n"
-    //                     "    print y;\n"
-    //                     "}\n";
+    const char* input = "int x;\n"
+                        "x = 42;\n"
+                        "if (x > 0) {\n"
+                        "    int y;\n"
+                        "    y = x + 10;\n"
+                        "    print y;\n"
+                        "}\n"
+                        "print y;";
 
-    const char *input = "int x;\n"
-            "x = 42;\n"
-            "y = 45;\n";
+    // const char *input = "int x;\n"
+    //         "x = 42;\n"
+    //         "y = 45;\n";
 
     printf("Analyzing input:\n%s\n\n", input);
 
@@ -266,7 +325,8 @@ int main() {
 
     if (result) {
         printf("Semantic analysis successful. No errors found.\n");
-    } else {
+    }
+    else {
         printf("Semantic analysis failed. Errors detected.\n");
     }
 
