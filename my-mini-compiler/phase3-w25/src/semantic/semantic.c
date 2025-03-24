@@ -1,10 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
-#include "semantic.h"
-
 #include <stdio.h>
 
-#include "parser.h"
+#include "../../include/parser.h"
+#include "../../include/semantic.h"
 
 // =============== BEGIN STEP 4 ===============
 void semantic_error(SemanticErrorType error, const char* name, int line) {

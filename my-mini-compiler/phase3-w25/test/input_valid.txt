@@ -47,3 +47,15 @@
 "int x;\n"
 "x = 42;\n"
 // END CASE
+
+========================================
+
+int x;     // Declaration
+int y;     // Another declaration
+x = 5;     // Initialization
+y = x + 2; // Using initialized variable
+if (x > 0) {
+    int z;     // Declaration in nested scope
+    z = x + y; // Using outer scope variables
+    print z;
+}
