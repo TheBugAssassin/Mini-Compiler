@@ -44,6 +44,25 @@ SymbolTable *init_symbol_table() {
     return table;
 }
 
+void symbol_table_dump(SymbolTable* table) {
+    printf("== SYMBOL TABLE DUMP ==\n");
+    printf("Total symbols: %lu\n", sizeof(*table) / sizeof(table[0]));
+    int index = 0;
+    Symbol *current_symbol = table->head;
+    while (current_symbol != NULL) {
+        printf(
+            "Symbol[%d]\n"
+            "Name: %s\n"
+            "Type: %s\n"
+            "Line Declared: %d\n",
+            "Intitialized: %s\n",
+            index, current_symbol->name, current_symbol->type, current_symbol->line_declared, (current_symbol->line_declared ? "Yes" : "No"));
+        index++;
+        current_symbol = current_symbol->next;
+    }
+    printf("===================\n");
+}
+
 // Add a symbol to the table
 // Inserts a new variable with given name, type, and line number into the current scope
 void add_symbol(SymbolTable *table, const char *name, int type, int line) {
@@ -130,6 +149,7 @@ void free_symbol_table(SymbolTable *table) {
 int analyze_semantics(ASTNode* ast) {
     SymbolTable* table = init_symbol_table();
     int result = check_program(ast, table);
+    symbol_table_dump(table);
     free_symbol_table(table);
     return result;
 }
@@ -176,11 +196,11 @@ int check_declaration(ASTNode* node, SymbolTable* table) {
 }
 
 int check_statement(ASTNode* node, SymbolTable* table) {
-    return 0;
+    return 1;
 }
 
 int check_expression(ASTNode* node, SymbolTable* table) {
-    return 0;
+    return 1;
 }
 
 // Check assignment node
@@ -212,13 +232,16 @@ int check_assignment(ASTNode* node, SymbolTable* table) {
 // =============== END STEP 3 ===============
 
 int main() {
+    // const char* input = "int x;\n"
+    //                     "x = 42;\n"
+    //                     "if (x > 0) {\n"
+    //                     "    int y;\n"
+    //                     "    y = x + 10;\n"
+    //                     "    print y;\n"
+    //                     "}\n";
+
     const char* input = "int x;\n"
-                        "x = 42;\n"
-                        "if (x > 0) {\n"
-                        "    int y;\n"
-                        "    y = x + 10;\n"
-                        "    print y;\n"
-                        "}\n";
+                        "x = 42;\n";
 
     printf("Analyzing input:\n%s\n\n", input);
 

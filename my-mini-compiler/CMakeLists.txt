@@ -13,7 +13,6 @@ add_executable(my-mini-compiler
         phase3-w25/include/tokens.h
         phase3-w25/include/lexer.h
         phase3-w25/include/parser.h
-        phase3-w25/include/semantic.h
         phase3-w25/src/parser/parser.c
         phase3-w25/src/lexer/lexer.c
         phase3-w25/src/semantic/semantic.c)
