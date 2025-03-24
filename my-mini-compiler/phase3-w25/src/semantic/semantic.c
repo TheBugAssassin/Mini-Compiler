@@ -241,10 +241,14 @@ int check_statement(ASTNode *node, SymbolTable *table) {
     if (!node) return 1;
 
     if (node->type == AST_IF || node->type == AST_WHILE) {
+        return check_expression(node->left, table);
+    }
+    if (node->type == AST_BLOCK) {
         enter_scope(table);
-        check_statement(node->left, table);
-        check_statement(node->right, table);
+        int result = check_statement(node->right, table);
         exit_scope(table);
+
+        return result;
     }
     else if (node->type == AST_VARDECL) {
         return check_declaration(node, table);
@@ -264,6 +268,40 @@ int check_statement(ASTNode *node, SymbolTable *table) {
 }
 
 int check_expression(ASTNode *node, SymbolTable *table) {
+    switch (node->type) {
+        case AST_NUMBER:
+            return 1;
+        break;
+        case AST_IDENTIFIER:
+            const char *name = node->token.lexeme;
+        // Lookup the symbol of the current variable in the statement
+        Symbol *existing = lookup_symbol(table, name);
+        // Check if it exists
+        if (!existing) {
+            semantic_error(SEM_ERROR_UNDECLARED_VARIABLE, name, node->token.line);
+            return 0;
+        }
+        if (!existing->is_initialized) {
+            semantic_error(SEM_ERROR_UNINITIALIZED_VARIABLE, name, node->token.line);
+            return 0;
+        }
+        return 1;
+        case AST_FACTORIAL:
+            break;
+        case AST_ADDRESS_OF:
+            break;
+        case AST_BINOP:
+            return check_expression(node->left, table) && check_expression(node->right, table);
+            break;
+        case AST_COMPARISONOP:
+            return check_expression(node->left, table) && check_expression(node->right, table);
+        case AST_BOOLOP:
+            return check_expression(node->left, table) && check_expression(node->right, table);
+        case AST_FUNCDECL:
+            break;
+        default:
+            break;
+    }
     return 1;
 }
 
@@ -297,13 +335,13 @@ int check_assignment(ASTNode *node, SymbolTable *table) {
 
 int main() {
     const char* input = "int x;\n"
-                        "x = 42;\n"
+                        //"x = 42;\n"
                         "if (x > 0) {\n"
                         "    int y;\n"
-                        "    y = x + 10;\n"
+                        "    y = z + 10;\n"
                         "    print y;\n"
-                        "}\n"
-                        "print y;";
+                        "}\n";
+                        //"print y;";
 
     // const char *input = "int x;\n"
     //         "x = 42;\n"
