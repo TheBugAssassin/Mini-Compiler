@@ -56,8 +56,7 @@ void symbol_table_dump(SymbolTable *table) {
         printf("Line Declared: %d\n", current_symbol->line_declared);
         if (current_symbol->is_initialized) {
             printf("Initialized: Yes\n");
-        }
-        else {
+        } else {
             printf("Initialized: No\n");
         }
         index++;
@@ -147,8 +146,7 @@ void exit_scope(SymbolTable *table) {
             *previous = current->next;
             free(current);
             current = *previous;
-        }
-        else {
+        } else {
             previous = &current->next;
             current = current->next;
         }
@@ -241,22 +239,17 @@ int check_statement(ASTNode *node, SymbolTable *table) {
     if (!node) return 1;
 
     if (node->type == AST_IF || node->type == AST_WHILE) {
-        return check_expression(node->left, table);
-    }
-    if (node->type == AST_BLOCK) {
+        return check_expression(node->left, table) && check_statement(node->right, table);
+    } else if (node->type == AST_BLOCK) {
         enter_scope(table);
-        int result = check_statement(node->right, table);
+        int result = check_statement(node->left, table) && check_statement(node->right, table);
         exit_scope(table);
-
         return result;
-    }
-    else if (node->type == AST_VARDECL) {
+    } else if (node->type == AST_VARDECL) {
         return check_declaration(node, table);
-    }
-    else if (node->type == AST_ASSIGN) {
+    } else if (node->type == AST_ASSIGN) {
         return check_assignment(node, table);
-    }
-    else if (node->type == AST_PRINT) {
+    } else if (node->type == AST_PRINT) {
         const char *name = node->left->token.lexeme;
         Symbol *symbol = lookup_symbol(table, name);
         if (!symbol) {
@@ -267,34 +260,60 @@ int check_statement(ASTNode *node, SymbolTable *table) {
     return 1;
 }
 
+int check_type_compatability(ASTNode *node) {
+    ASTNode *left = node->left;
+    ASTNode *right = node->right;
+    if (!left || !right) {
+        return 0;
+    }
+
+    switch (node->type) {
+        case (AST_COMPARISONOP || AST_BINOP || AST_BOOLOP): {
+            if ((left->type == right->type) ||
+                (left->right->type == right->type) ||
+                (left->type == right->right->type)
+            ) {
+                return 1;
+            }
+            semantic_error(SEM_ERROR_TYPE_MISMATCH, node->token.lexeme, left->token.line);
+            return 0;
+        }
+        default:
+            return 0;
+    }
+}
+
 int check_expression(ASTNode *node, SymbolTable *table) {
     switch (node->type) {
         case AST_NUMBER:
             return 1;
-        break;
-        case AST_IDENTIFIER:
+            break;
+        case AST_IDENTIFIER: {
             const char *name = node->token.lexeme;
-        // Lookup the symbol of the current variable in the statement
-        Symbol *existing = lookup_symbol(table, name);
-        // Check if it exists
-        if (!existing) {
-            semantic_error(SEM_ERROR_UNDECLARED_VARIABLE, name, node->token.line);
-            return 0;
+            // Lookup the symbol of the current variable in the statement
+            Symbol *existing = lookup_symbol(table, name);
+            // Check if it exists
+            if (!existing) {
+                semantic_error(SEM_ERROR_UNDECLARED_VARIABLE, name, node->token.line);
+                return 0;
+            }
+            if (!existing->is_initialized) {
+                semantic_error(SEM_ERROR_UNINITIALIZED_VARIABLE, name, node->token.line);
+                return 0;
+            }
+            return 1;
         }
-        if (!existing->is_initialized) {
-            semantic_error(SEM_ERROR_UNINITIALIZED_VARIABLE, name, node->token.line);
-            return 0;
-        }
-        return 1;
         case AST_FACTORIAL:
             break;
         case AST_ADDRESS_OF:
             break;
         case AST_BINOP:
             return check_expression(node->left, table) && check_expression(node->right, table);
-            break;
-        case AST_COMPARISONOP:
-            return check_expression(node->left, table) && check_expression(node->right, table);
+        case AST_COMPARISONOP: {
+            if (check_type_compatability(node)) {
+                return check_expression(node->left, table) && check_expression(node->right, table);
+            }
+        }
         case AST_BOOLOP:
             return check_expression(node->left, table) && check_expression(node->right, table);
         case AST_FUNCDECL:
@@ -334,14 +353,14 @@ int check_assignment(ASTNode *node, SymbolTable *table) {
 // =============== END STEP 3 ===============
 
 int main() {
-    const char* input = "int x;\n"
-                        //"x = 42;\n"
-                        "if (x > 0) {\n"
-                        "    int y;\n"
-                        "    y = z + 10;\n"
-                        "    print y;\n"
-                        "}\n";
-                        //"print y;";
+    const char *input = "int x;\n"
+            "x = 42;\n"
+            "if (x > y) {\n"
+            "    int y;\n"
+            "    y = z + 10;\n"
+            "    print y;\n"
+            "}\n";
+    //"print y;";
 
     // const char *input = "int x;\n"
     //         "x = 42;\n"
@@ -363,8 +382,7 @@ int main() {
 
     if (result) {
         printf("Semantic analysis successful. No errors found.\n");
-    }
-    else {
+    } else {
         printf("Semantic analysis failed. Errors detected.\n");
     }
 
