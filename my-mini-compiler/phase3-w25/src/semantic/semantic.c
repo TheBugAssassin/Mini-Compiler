@@ -50,14 +50,14 @@ void symbol_table_dump(SymbolTable *table) {
     unsigned int index = 0;
     Symbol *current_symbol = table->head;
     while (current_symbol != NULL) {
-        printf("Symbol[%u]\n", index);
-        printf("Name: %s\n", current_symbol->name);
-        printf("Type: %d\n", current_symbol->type);
-        printf("Line Declared: %d\n", current_symbol->line_declared);
+        printf("\tSymbol[%u]\n", index);
+        printf("\tName: %s\n", current_symbol->name);
+        printf("\tType: %d\n", current_symbol->type);
+        printf("\tLine Declared: %d\n", current_symbol->line_declared);
         if (current_symbol->is_initialized) {
-            printf("Initialized: Yes\n");
+            printf("\tInitialized: Yes\n");
         } else {
-            printf("Initialized: No\n");
+            printf("\tInitialized: No\n");
         }
         index++;
         current_symbol = current_symbol->next;
@@ -184,7 +184,8 @@ void free_symbol_table(SymbolTable *table) {
 int analyze_semantics(ASTNode *ast) {
     SymbolTable *table = init_symbol_table();
     int result = check_program(ast, table);
-    symbol_table_dump(table);
+    if (result)
+        symbol_table_dump(table);
     free_symbol_table(table);
     return result;
 }
@@ -260,7 +261,7 @@ int check_statement(ASTNode *node, SymbolTable *table) {
     return 1;
 }
 
-int check_type_compatability(ASTNode *node) {
+int check_type_compatability(ASTNode *node, SymbolTable *table) {
     ASTNode *left = node->left;
     ASTNode *right = node->right;
     if (!left || !right) {
@@ -268,14 +269,33 @@ int check_type_compatability(ASTNode *node) {
     }
 
     switch (node->type) {
-        case (AST_COMPARISONOP || AST_BINOP || AST_BOOLOP): {
-            if ((left->type == right->type) ||
-                (left->right->type == right->type) ||
-                (left->type == right->right->type)
-            ) {
+        case AST_COMPARISONOP:
+        case AST_BINOP:
+        case AST_BOOLOP: {
+            if (left->type == AST_NUMBER && right->type == AST_NUMBER) {
                 return 1;
             }
-            semantic_error(SEM_ERROR_TYPE_MISMATCH, node->token.lexeme, left->token.line);
+
+            Symbol *left_symbol;
+            Symbol *right_symbol;
+
+            if (left->type == AST_IDENTIFIER) {
+                left_symbol = lookup_symbol(table, left->token.lexeme);
+                if (right->type == AST_NUMBER &&
+                    (left_symbol->type == TOKEN_INT || left_symbol->type == TOKEN_FLOAT || left_symbol->type ==
+                     TOKEN_CHAR || left_symbol->type == TOKEN_DOUBLE)) {
+                    return 1;
+                }
+            }
+
+            if (right->type == AST_IDENTIFIER) {
+                right_symbol = lookup_symbol(table, right->token.lexeme);
+                if (left->type == AST_NUMBER &&
+                    (right_symbol->type == TOKEN_INT || right_symbol->type == TOKEN_FLOAT || right_symbol->type ==
+                     TOKEN_CHAR || right_symbol->type == TOKEN_DOUBLE)) {
+                    return 1;
+                }
+            }
             return 0;
         }
         default:
@@ -287,7 +307,6 @@ int check_expression(ASTNode *node, SymbolTable *table) {
     switch (node->type) {
         case AST_NUMBER:
             return 1;
-            break;
         case AST_IDENTIFIER: {
             const char *name = node->token.lexeme;
             // Lookup the symbol of the current variable in the statement
@@ -296,10 +315,11 @@ int check_expression(ASTNode *node, SymbolTable *table) {
             if (!existing) {
                 semantic_error(SEM_ERROR_UNDECLARED_VARIABLE, name, node->token.line);
                 return 0;
-            }
-            if (!existing->is_initialized) {
-                semantic_error(SEM_ERROR_UNINITIALIZED_VARIABLE, name, node->token.line);
-                return 0;
+            } else {
+                if (!existing->is_initialized) {
+                    semantic_error(SEM_ERROR_UNINITIALIZED_VARIABLE, name, node->token.line);
+                    return 0;
+                }
             }
             return 1;
         }
@@ -308,20 +328,18 @@ int check_expression(ASTNode *node, SymbolTable *table) {
         case AST_ADDRESS_OF:
             break;
         case AST_BINOP:
-            return check_expression(node->left, table) && check_expression(node->right, table);
-        case AST_COMPARISONOP: {
-            if (check_type_compatability(node)) {
-                return check_expression(node->left, table) && check_expression(node->right, table);
+        case AST_COMPARISONOP:
+        case AST_BOOLOP: {
+            if (!check_type_compatability(node, table)) {
+                semantic_error(SEM_ERROR_TYPE_MISMATCH, node->token.lexeme, node->token.line);
             }
-        }
-        case AST_BOOLOP:
             return check_expression(node->left, table) && check_expression(node->right, table);
+        }
         case AST_FUNCDECL:
             break;
         default:
-            break;
+            return 0;
     }
-    return 1;
 }
 
 // Check assignment node
@@ -353,20 +371,26 @@ int check_assignment(ASTNode *node, SymbolTable *table) {
 // =============== END STEP 3 ===============
 
 int main() {
-    const char *input = "int x;\n"
+    const char *input =
             "x = 42;\n"
             "if (x > y) {\n"
             "    int y;\n"
             "    y = z + 10;\n"
             "    print y;\n"
             "}\n";
+
+    // const char *input =
+    //         "// Uninitialized variable\n"
+    //         "int x;\n"
+    //         "int y;\n"
+    //         "y = x + 5; // Warning: x used before initialization\n";
     //"print y;";
 
     // const char *input = "int x;\n"
     //         "x = 42;\n"
     //         "y = 45;\n";
 
-    printf("Analyzing input:\n%s\n\n", input);
+    printf("Analyzing input:\n%s\n", input);
 
     // Lexical analysis and parsing
     parser_init(input);
